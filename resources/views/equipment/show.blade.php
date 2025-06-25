@@ -36,7 +36,8 @@
                     </table>
 
                     <div class="mt-6">
-                        <a href="{{ route('equipment.index') }}" class="text-indigo-600 hover:text-indigo-900">← Back to List</a>
+                        <a href="{{ route('equipment.showByLab', $equipment->lab_id) }}" class="text-indigo-600 hover:text-indigo-900">
+                            ← Back to List</a>
                     </div>
                 </div>
             </div>

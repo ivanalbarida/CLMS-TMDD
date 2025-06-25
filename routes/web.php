@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EquipmentController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CsvImportController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -27,5 +28,12 @@ require __DIR__.'/auth.php';
 Route::resource('equipment', EquipmentController::class)
     ->middleware(['auth', 'verified']);
 
+Route::get('/labs/{lab}/equipment', [EquipmentController::class, 'showByLab'])->name('equipment.showByLab')
+    ->middleware(['auth', 'verified']);
+
 Route::resource('maintenance', MaintenanceController::class)
     ->middleware(['auth', 'verified']);
+
+// CSV Import Routes (place them inside the authenticated group)
+Route::get('/import', [CsvImportController::class, 'show'])->name('import.show')->middleware(['auth', 'verified']);
+Route::post('/import', [CsvImportController::class, 'store'])->name('import.store')->middleware(['auth', 'verified']);

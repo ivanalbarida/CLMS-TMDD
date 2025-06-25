@@ -18,4 +18,13 @@ class Lab extends Model
         'lab_name',
         'building_name',
     ];
+
+    /**
+     * Get all of the equipment for the Lab.
+     */
+    public function equipment() // <-- THIS IS THE MISSING METHOD
+    {
+        return $this->hasMany(Equipment::class);
+    }
+
 }

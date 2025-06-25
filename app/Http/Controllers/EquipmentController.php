@@ -16,9 +16,9 @@ class EquipmentController extends Controller
      */
     public function index()
     {
-        // Use 'with' to eager load the lab and components relationships to avoid many database queries
-        $equipment = Equipment::with('lab', 'components')->latest()->get();
-        return view('equipment.index', compact('equipment'));
+        // The index will now list labs with an equipment count for each.
+        $labs = Lab::withCount('equipment')->get();
+        return view('equipment.index', compact('labs'));
     }
 
     /**
@@ -93,24 +93,69 @@ class EquipmentController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(Equipment $equipment)
     {
-        //
+        $equipment->load('components'); // Load components to edit them
+        $labs = Lab::all();
+        $statuses = ['Working', 'For Repair', 'In Use', 'Retired'];
+        $componentTypes = ['Monitor', 'OS', 'Processor', 'CPU Serial Num', 'Motherboard', 'Memory', 'Storage', 'Video Card', 'PSU', 'Router', 'Switch', 'Other'];
+
+        return view('equipment.edit', compact('equipment', 'labs', 'statuses', 'componentTypes'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Equipment $equipment)
     {
-        //
+        $request->validate([
+            'tag_number' => 'required|string|unique:equipment,tag_number,' . $equipment->id,
+            'lab_id' => 'required|exists:labs,id',
+            'status' => 'required|string',
+            'notes' => 'nullable|string',
+            'components' => 'nullable|array', // Components can be empty now
+        ]);
+
+        DB::transaction(function () use ($request, $equipment) {
+            // 1. Update the main equipment details
+            $equipment->update($request->only('tag_number', 'lab_id', 'status', 'notes'));
+
+            // 2. Sync Components: Delete old ones, update existing, add new ones
+            // A simple way is to delete all old components and re-create them from the form.
+            $equipment->components()->delete();
+
+            if ($request->has('components')) {
+                foreach ($request->components as $componentData) {
+                    if (!empty($componentData['type']) && !empty($componentData['description'])) {
+                        $equipment->components()->create([
+                            'type' => $componentData['type'],
+                            'description' => $componentData['description'],
+                            'serial_number' => $componentData['serial_number'],
+                        ]);
+                    }
+                }
+            }
+        });
+
+        return redirect()->route('equipment.showByLab', $equipment->lab_id)->with('success', 'Equipment updated successfully.');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Equipment $equipment)
     {
-        //
+        // The database is set up with cascading deletes,
+        // so deleting the equipment will also delete its components and maintenance records.
+        $equipment->delete();
+
+        return redirect()->route('equipment.index')->with('success', 'Equipment deleted successfully.');
+    }
+
+    public function showByLab(Lab $lab)
+    {
+        // Eager load the equipment and its components for the given lab
+        $lab->load('equipment.components');
+        return view('equipment.list-by-lab', compact('lab'));
     }
 }
