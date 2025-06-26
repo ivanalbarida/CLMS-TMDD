@@ -8,4 +8,10 @@ export default defineConfig({
             refresh: true,
         }),
     ],
+    server: {
+        host: '0.0.0.0', // This tells Vite to listen on all available network interfaces
+        hmr: {
+            host: 'localhost', // Hot Module Replacement should still point to localhost for your own browser
+        }
+    },
 });
