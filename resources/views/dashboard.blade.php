@@ -12,9 +12,27 @@
                 <!-- Main Content Column (Announcements etc.) -->
                 <div class="md:col-span-2 bg-white overflow-hidden shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
-                        <h3 class="text-lg font-semibold border-b pb-2 mb-4">Announcements</h3>
-                        <p>Welcome to the Computer Lab Management System!</p>
-                        <!-- This is where announcements would go -->
+                        <div class="flex justify-between items-center border-b pb-2 mb-4">
+                            <h3 class="text-lg font-semibold">Announcements</h3>
+                            
+                            {{-- This button only shows if the user is an Admin --}}
+                            @if(Auth::user()->role == 'Admin')
+                                <a href="{{ route('announcements.create') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
+                                    New Announcement
+                                </a>
+                            @endif
+                        </div>
+                        
+                        <div class="space-y-4">
+                            @forelse($announcements as $announcement)
+                                <div>
+                                    <h4 class="font-bold">{{ $announcement->title }}</h4>
+                                    <p class="text-sm text-gray-700">{{ $announcement->content }}</p>
+                                </div>
+                            @empty
+                                <p>No announcements yet.</p>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
 

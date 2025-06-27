@@ -34,12 +34,14 @@
                                     <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($record->date_reported)->format('M d, Y') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $record->status }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    @if(in_array(Auth::user()->role, ['Admin', 'Technician']))
                                         <a href="{{ route('maintenance.edit', $record->id) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
                                         <form action="{{ route('maintenance.destroy', $record->id) }}" method="POST" class="inline-block ml-4">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="text-red-600 hover:text-red-900" onclick="return confirm('Are you sure?')">Delete</button>
                                         </form>
+                                    @endif
                                     </td>
                                 </tr>
                                 @empty
