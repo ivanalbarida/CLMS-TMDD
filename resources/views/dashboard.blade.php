@@ -25,9 +25,28 @@
                         
                         <div class="space-y-4">
                             @forelse($announcements as $announcement)
-                                <div>
-                                    <h4 class="font-bold">{{ $announcement->title }}</h4>
-                                    <p class="text-sm text-gray-700">{{ $announcement->content }}</p>
+                                <div class="border-b pb-4 last:border-b-0">
+                                    
+                                    <!-- START OF NEW/MODIFIED SECTION -->
+                                    <div class="flex justify-between items-start">
+                                        <h4 class="font-bold text-lg">{{ $announcement->title }}</h4>
+
+                                        {{-- Admin-only action buttons --}}
+                                        @if(Auth::user()->role == 'Admin')
+                                            <div class="flex space-x-4 text-sm flex-shrink-0 ml-4">
+                                                <a href="{{ route('announcements.edit', $announcement->id) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                                <form action="{{ route('announcements.destroy', $announcement->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this announcement?');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="text-red-600 hover:text-red-900">Delete</button>
+                                                </form>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    <!-- END OF NEW/MODIFIED SECTION -->
+
+                                    {{-- The content part remains the same --}}
+                                    <p class="mt-1 text-sm text-gray-700">{{ $announcement->content }}</p>
                                 </div>
                             @empty
                                 <p>No announcements yet.</p>
