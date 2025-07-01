@@ -8,6 +8,7 @@ use App\Models\Equipment;
 use App\Models\Component;
 use App\Models\Lab;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class EquipmentController extends Controller
 {
@@ -41,7 +42,13 @@ class EquipmentController extends Controller
     {
         // --- Validation ---
         $request->validate([
-            'tag_number' => 'required|string|unique:equipment,tag_number',
+            'tag_number' => [
+            'required',
+            'string',
+            Rule::unique('equipment')->where(function ($query) use ($request) {
+                return $query->where('lab_id', $request->lab_id);
+                }),
+            ],
             'lab_id' => 'required|exists:labs,id',
             'status' => 'required|string',
             'notes' => 'nullable|string',
@@ -109,7 +116,13 @@ class EquipmentController extends Controller
     public function update(Request $request, Equipment $equipment)
     {
         $request->validate([
-            'tag_number' => 'required|string|unique:equipment,tag_number,' . $equipment->id,
+            'tag_number' => [
+            'required',
+            'string',
+            Rule::unique('equipment')->where(function ($query) use ($request) {
+                return $query->where('lab_id', $request->lab_id);
+            })->ignore($equipment->id), // Important: ignore the current record itself
+        ],
             'lab_id' => 'required|exists:labs,id',
             'status' => 'required|string',
             'notes' => 'nullable|string',

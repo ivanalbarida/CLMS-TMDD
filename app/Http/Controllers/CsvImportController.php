@@ -56,13 +56,28 @@ class CsvImportController extends Controller
                 }
 
                 $data = array_combine($header, $row);
+                
+                // Assign the tag number to a variable for easy reuse
+                $tagNumber = trim($data['PC#'] ?? '');
 
-                if (empty(trim($data['PC#'] ?? ''))) {
+                if (empty($tagNumber)) {
                     continue;
                 }
                 
+                // --- NEW VALIDATION CHECK ---
+                // Check if a piece of equipment with the same tag number already exists IN THIS SPECIFIC LAB.
+                $exists = Equipment::where('tag_number', $tagNumber)
+                                   ->where('lab_id', $request->lab_id)
+                                   ->exists();
+
+                if ($exists) {
+                    // If it exists, throw a specific error and stop the import.
+                    throw new \Exception("Duplicate entry found for Tag Number '{$tagNumber}' in the selected lab.");
+                }
+
+                // This part only runs if the check above passes
                 $equipment = Equipment::create([
-                    'tag_number' => trim($data['PC#']),
+                    'tag_number' => $tagNumber, // Use the variable
                     'lab_id' => $request->lab_id,
                     'status' => trim($data['Status']), // Changed 'Status ' to 'Status' after trimming
                     'notes' => null,

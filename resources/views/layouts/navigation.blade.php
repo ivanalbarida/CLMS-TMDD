@@ -30,6 +30,13 @@
                     <x-nav-link :href="route('maintenance.index')" :active="request()->routeIs('maintenance.*')">
                         {{ __('Maintenance Log') }}
                     </x-nav-link>
+
+                    {{-- Admin-only User Management Link --}}
+                    @if(Auth::user()->role == 'Admin')
+                        <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
+                            {{ __('User Management') }}
+                        </x-nav-link>
+                    @endif
                 </div>
             </div>
 
