@@ -55,17 +55,18 @@ class LabController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
+     * Show the form for editing the specified lab.
      */
-    public function edit(string $id)
+    public function edit(Lab $lab) // <-- THE FIX
     {
+        // Now, Laravel automatically provides the $lab object.
         return view('labs.edit', compact('lab'));
     }
 
     /**
-     * Update the specified resource in storage.
+     * Update the specified lab in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, Lab $lab) // <-- PROACTIVE FIX
     {
         $request->validate([
             'lab_name' => 'required|string|max:255',
@@ -78,11 +79,13 @@ class LabController extends Controller
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified lab from storage.
      */
-    public function destroy(string $id)
+    public function destroy(Lab $lab) // <-- THE FIX
     {
+        // Now Laravel provides the full $lab object to delete.
         $lab->delete();
+        
         return redirect()->route('labs.index')->with('success', 'Lab deleted successfully.');
     }
 }
