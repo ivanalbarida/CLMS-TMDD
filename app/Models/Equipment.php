@@ -34,6 +34,6 @@ class Equipment extends Model
     
     public function maintenanceRecords()
     {
-        return $this->hasMany(MaintenanceRecord::class);
+        return $this->belongsToMany(MaintenanceRecord::class, 'equipment_maintenance');
     }
 }

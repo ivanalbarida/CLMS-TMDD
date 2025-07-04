@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MaintenanceController extends Controller
 {
@@ -21,37 +22,35 @@ class MaintenanceController extends Controller
         return view('maintenance.index', compact('records'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
-        $equipment = Equipment::orderBy('tag_number')->get();
-        // Get only users with Admin or Technician roles
-        $technicians = User::whereIn('role', ['Admin', 'Technician'])->orderBy('name')->get();
+        $labs = \App\Models\Lab::with('equipment')->get();
+        $technicians = \App\Models\User::whereIn('role', ['Admin', 'Technician'])->orderBy('name')->get();
         $statuses = ['Pending', 'In Progress', 'Completed'];
 
-        return view('maintenance.create', compact('equipment', 'technicians', 'statuses'));
+        return view('maintenance.create', compact('labs', 'technicians', 'statuses'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
         $request->validate([
-             'type' => 'required|in:Corrective,Preventive',
-            'equipment_id' => 'required|exists:equipment,id',
-            'user_id' => 'required|exists:users,id',
-            'date_reported' => 'required|date',
-            'issue_description' => 'required|string',
-            'status' => 'required|string',
-            'scheduled_for' => 'nullable|date',
+            'equipment_ids' => 'required|array|min:1', 
+            'equipment_ids.*' => 'exists:equipment,id', 
         ]);
 
-        MaintenanceRecord::create($request->all());
+        DB::transaction(function () use ($request) {
+            $maintenanceRecord = MaintenanceRecord::create([
+                'type' => $request->type,
+                'user_id' => $request->user_id,
+                'date_reported' => $request->date_reported,
+                'issue_description' => $request->issue_description,
+                'status' => $request->status,
+            ]);
 
-        return redirect()->route('maintenance.index')->with('success', 'Maintenance log created successfully.');
+            $maintenanceRecord->equipment()->attach($request->equipment_ids);
+        });
+
+        return redirect()->route('maintenance.index')->with('success', 'Maintenance log created successfully for multiple items.');
     }
 
     /**
@@ -65,33 +64,33 @@ class MaintenanceController extends Controller
         /**
      * Show the form for editing the specified resource.
      */
-    public function edit(MaintenanceRecord $maintenance) // <-- Use Route Model Binding
+    public function edit(MaintenanceRecord $maintenance)
     {
-        $equipment = Equipment::orderBy('tag_number')->get();
-        $technicians = User::whereIn('role', ['Admin', 'Technician'])->orderBy('name')->get();
+        $maintenance->load('equipment');
+        $assignedEquipmentIds = $maintenance->equipment->pluck('id')->toArray();
+        
+        $labs = \App\Models\Lab::with('equipment')->get();
+        
+        $technicians = \App\Models\User::whereIn('role', ['Admin', 'Technician'])->orderBy('name')->get();
         $statuses = ['Pending', 'In Progress', 'Completed'];
 
-        return view('maintenance.edit', compact('maintenance', 'equipment', 'technicians', 'statuses'));
+        return view('maintenance.edit', compact('maintenance', 'assignedEquipmentIds', 'labs', 'technicians', 'statuses'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, MaintenanceRecord $maintenance) // <-- Use Route Model Binding
+    public function update(Request $request, MaintenanceRecord $maintenance)
     {
         $request->validate([
-             'type' => 'required|in:Corrective,Preventive',
-            'equipment_id' => 'required|exists:equipment,id',
-            'user_id' => 'required|exists:users,id',
-            'date_reported' => 'required|date',
-            'issue_description' => 'required|string',
-            'action_taken' => 'nullable|string',
-            'status' => 'required|string',
-            'scheduled_for' => 'nullable|date',
-            'date_completed' => 'nullable|date',
+            'equipment_ids' => 'required|array|min:1',
+            'equipment_ids.*' => 'exists:equipment,id',
         ]);
 
-        $maintenance->update($request->all());
+        DB::transaction(function () use ($request, $maintenance) {
+            $maintenance->update($request->except(['_token', '_method', 'equipment_ids']));
+            $maintenance->equipment()->sync($request->equipment_ids);
+        });
 
         return redirect()->route('maintenance.index')->with('success', 'Maintenance log updated successfully.');
     }
@@ -108,8 +107,9 @@ class MaintenanceController extends Controller
 
     public function schedule()
     {
-        $equipment = \App\Models\Equipment::orderBy('tag_number')->get();
+        $labs = \App\Models\Lab::with('equipment')->get();
         $technicians = \App\Models\User::whereIn('role', ['Admin', 'Technician'])->orderBy('name')->get();
-        return view('maintenance.schedule', compact('equipment', 'technicians'));
+        
+        return view('maintenance.schedule', compact('labs', 'technicians'));
     }
 }

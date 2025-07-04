@@ -47,7 +47,11 @@
                                     </td>
                                     
                                     <!-- The rest of the data cells -->
-                                    <td class="px-6 py-4 whitespace-nowrap">{{ $record->equipment->tag_number ?? 'N/A' }}</td>
+                                    <td class="px-6 py-4">
+                                        @foreach($record->equipment as $pc)
+                                            <span class="block">{{ $pc->tag_number }}</span>
+                                        @endforeach
+                                    </td>
                                     <td class="px-6 py-4 whitespace-normal max-w-xs truncate">{{ $record->issue_description }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $record->user->name ?? 'N/A' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($record->date_reported)->format('M d, Y') }}</td>
