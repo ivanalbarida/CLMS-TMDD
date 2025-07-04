@@ -31,6 +31,10 @@
                         {{ __('Maintenance Log') }}
                     </x-nav-link>
 
+                    <x-nav-link :href="route('software-checklist.index')" :active="request()->routeIs('software-checklist.*')">
+                        {{ __('Software Checklist') }}
+                    </x-nav-link>
+
                     {{-- Admin-only User Management Link --}}
                     @if(Auth::user()->role == 'Admin')
                         <x-nav-link :href="route('users.index')" :active="request()->routeIs('users.*')">
