@@ -43,7 +43,7 @@
                                                     <button type="submit" class="text-red-600 hover:text-red-900 ml-2">Delete</button>
                                                 </form>
                                             </span>
-                                        </li>
+                                        </li>   
                                         @endforeach
                                     </ul>
                                 </div>

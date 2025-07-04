@@ -10,11 +10,13 @@ class MaintenanceRecord extends Model
     use HasFactory;
 
     protected $fillable = [
+        'type',
         'equipment_id',
         'user_id', // This will be the assigned technician
         'issue_description',
         'action_taken',
         'date_reported',
+        'scheduled_for',
         'status',
         'date_completed',
     ];

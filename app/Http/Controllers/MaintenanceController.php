@@ -40,11 +40,13 @@ class MaintenanceController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+             'type' => 'required|in:Corrective,Preventive',
             'equipment_id' => 'required|exists:equipment,id',
             'user_id' => 'required|exists:users,id',
             'date_reported' => 'required|date',
             'issue_description' => 'required|string',
             'status' => 'required|string',
+            'scheduled_for' => 'nullable|date',
         ]);
 
         MaintenanceRecord::create($request->all());
@@ -78,12 +80,14 @@ class MaintenanceController extends Controller
     public function update(Request $request, MaintenanceRecord $maintenance) // <-- Use Route Model Binding
     {
         $request->validate([
+             'type' => 'required|in:Corrective,Preventive',
             'equipment_id' => 'required|exists:equipment,id',
             'user_id' => 'required|exists:users,id',
             'date_reported' => 'required|date',
             'issue_description' => 'required|string',
             'action_taken' => 'nullable|string',
             'status' => 'required|string',
+            'scheduled_for' => 'nullable|date',
             'date_completed' => 'nullable|date',
         ]);
 
@@ -100,5 +104,12 @@ class MaintenanceController extends Controller
         $maintenance->delete();
         
         return redirect()->route('maintenance.index')->with('success', 'Maintenance log deleted successfully.');
+    }
+
+    public function schedule()
+    {
+        $equipment = \App\Models\Equipment::orderBy('tag_number')->get();
+        $technicians = \App\Models\User::whereIn('role', ['Admin', 'Technician'])->orderBy('name')->get();
+        return view('maintenance.schedule', compact('equipment', 'technicians'));
     }
 }

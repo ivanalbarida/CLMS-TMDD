@@ -31,5 +31,15 @@ class DashboardController extends Controller
 
         // --- Pass ALL data to the view in ONE return statement ---
         return view('dashboard', compact('stats', 'recentActivities', 'announcements'));
+
+        // In DashboardController@index
+        $upcomingPM = MaintenanceRecord::where('type', 'Preventive')
+                                    ->where('status', 'Pending')
+                                    ->where('scheduled_for', '>=', now()->toDateString())
+                                    ->orderBy('scheduled_for', 'asc')
+                                    ->limit(5)
+                                    ->get();
+
+        return view('dashboard', compact('stats', 'recentActivities', 'announcements', 'upcomingPM'));
     }
 }
