@@ -1,4 +1,3 @@
-<!-- File: resources/views/software-checklist/index.blade.php -->
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl ...">{{ __('Software Checklist') }}</h2>
@@ -35,7 +34,7 @@
                                                 <strong>{{ $item->software_name }}</strong> {{ $item->version }} 
                                                 @if($item->notes) <em class="text-gray-500 text-sm">- {{ $item->notes }}</em> @endif
                                             </span>
-                                            <span class="text-xs"> <!-- REMOVED the opacity and hover classes -->
+                                            <span class="text-xs"> 
                                                 (Last updated by {{ $item->user->name }})
                                                 <a href="{{ route('software-checklist.edit', $item->id) }}" class="text-indigo-600 hover:text-indigo-900 ml-4">Edit</a>
                                                 <form action="{{ route('software-checklist.destroy', $item->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Are you sure?')">

@@ -27,7 +27,6 @@
                             @forelse($announcements as $announcement)
                                 <div class="border-b pb-4 last:border-b-0">
                                     
-                                    <!-- START OF NEW/MODIFIED SECTION -->
                                     <div class="flex justify-between items-start">
                                         <h4 class="font-bold text-lg">{{ $announcement->title }}</h4>
 
@@ -43,7 +42,6 @@
                                             </div>
                                         @endif
                                     </div>
-                                    <!-- END OF NEW/MODIFIED SECTION -->
 
                                     {{-- The content part remains the same --}}
                                     <p class="mt-1 text-sm text-gray-700">{{ $announcement->content }}</p>
@@ -102,6 +100,28 @@
                                     </div>
                                 @empty
                                     <p class="text-sm text-gray-500">No recent activities.</p>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                        <div class="p-6 text-gray-900">
+                            <h3 class="text-lg font-semibold border-b pb-2 mb-4">Upcoming Scheduled PM</h3>
+                            <div class="space-y-4">
+                                @forelse($upcomingPM as $pm)
+                                    <div class="text-sm">
+                                        <p class="font-semibold">
+                                            <a href="{{ route('equipment.show', $pm->equipment->id) }}" class="text-indigo-600 hover:underline">
+                                                {{ $pm->equipment->tag_number }} ({{ $pm->equipment->lab->lab_name }})
+                                            </a>
+                                        </p>
+                                        <p class="text-gray-500 text-xs">
+                                            Scheduled for: <span class="font-bold">{{ \Carbon\Carbon::parse($pm->scheduled_for)->format('M d, Y') }}</span>
+                                        </p>
+                                    </div>
+                                @empty
+                                    <p class="text-sm text-gray-500">No upcoming preventive maintenance.</p>
                                 @endforelse
                             </div>
                         </div>

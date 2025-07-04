@@ -81,9 +81,8 @@ class LabController extends Controller
     /**
      * Remove the specified lab from storage.
      */
-    public function destroy(Lab $lab) // <-- THE FIX
+    public function destroy(Lab $lab)
     {
-        // Now Laravel provides the full $lab object to delete.
         $lab->delete();
         
         return redirect()->route('labs.index')->with('success', 'Lab deleted successfully.');

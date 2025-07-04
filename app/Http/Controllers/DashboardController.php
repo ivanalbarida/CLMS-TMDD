@@ -6,7 +6,7 @@ use App\Models\Equipment;
 use App\Models\MaintenanceRecord;
 use App\Models\Announcement;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; // We'll use this for counting
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -25,21 +25,20 @@ class DashboardController extends Controller
                             ->latest('date_reported')
                             ->limit(5)
                             ->get();
-
+        
         // --- Announcements ---
         $announcements = Announcement::latest()->limit(3)->get();
 
-        // --- Pass ALL data to the view in ONE return statement ---
-        return view('dashboard', compact('stats', 'recentActivities', 'announcements'));
-
-        // In DashboardController@index
+        // --- Preventive Maintenance ---
         $upcomingPM = MaintenanceRecord::where('type', 'Preventive')
-                                    ->where('status', 'Pending')
-                                    ->where('scheduled_for', '>=', now()->toDateString())
-                                    ->orderBy('scheduled_for', 'asc')
-                                    ->limit(5)
-                                    ->get();
-
+                                ->where('status', 'Pending')
+                                ->where('scheduled_for', '>=', now()->toDateString())
+                                ->orderBy('scheduled_for', 'asc')
+                                ->with('equipment') // Eager load equipment to prevent extra queries
+                                ->limit(5)
+                                ->get();
+        
+        // Pass ALL the data to the view, including the new variable
         return view('dashboard', compact('stats', 'recentActivities', 'announcements', 'upcomingPM'));
     }
 }

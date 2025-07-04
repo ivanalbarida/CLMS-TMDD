@@ -34,15 +34,12 @@ class CsvImportController extends Controller
 
         $header = fgetcsv($file);
         
-        // --- IMPROVEMENT: Clean up all header names robustly ---
         $cleanedHeaders = [];
         foreach ($header as $key => $value) {
-            // Remove BOM, trim whitespace from start/end
             $cleanedValue = trim(preg_replace('/^\x{FEFF}/u', '', $value));
             $cleanedHeaders[] = $cleanedValue;
         }
         $header = $cleanedHeaders;
-        // --- END IMPROVEMENT ---
 
         DB::beginTransaction();
         try {
@@ -64,7 +61,6 @@ class CsvImportController extends Controller
                     continue;
                 }
                 
-                // --- NEW VALIDATION CHECK ---
                 // Check if a piece of equipment with the same tag number already exists IN THIS SPECIFIC LAB.
                 $exists = Equipment::where('tag_number', $tagNumber)
                                    ->where('lab_id', $request->lab_id)
