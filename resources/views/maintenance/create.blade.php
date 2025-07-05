@@ -42,7 +42,6 @@
                             </div>
                         </div>
 
-                        <!-- START OF ADDED SECTION -->
                         <!-- Step 3: Fill in Details -->
                         <div class="border-t pt-6 space-y-6">
                             <h3 class="block font-medium text-sm text-gray-700">3. Provide Log Details</h3>
@@ -79,7 +78,6 @@
                                 <textarea id="issue_description" name="issue_description" rows="4" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm"></textarea>
                             </div>
                         </div>
-                        <!-- END OF ADDED SECTION -->
 
                     </div>
 

@@ -42,6 +42,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/labs/{lab}/equipment', [EquipmentController::class, 'showByLab'])->name('equipment.showByLab');
     Route::resource('equipment', EquipmentController::class);
 
+    Route::get('/maintenance/{maintenance}/complete', [MaintenanceController::class, 'complete'])->name('maintenance.complete');
+
     // 3. Admin-Only Routes
     Route::middleware('is.admin')->group(function () {
         

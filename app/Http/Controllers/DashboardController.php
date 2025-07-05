@@ -17,28 +17,32 @@ class DashboardController extends Controller
             'total_equipment' => Equipment::count(),
             'working_equipment' => Equipment::where('status', 'Working')->count(),
             'for_repair' => Equipment::where('status', 'For Repair')->count(),
-            'pending_maintenance' => MaintenanceRecord::where('status', 'Pending')->count(),
+            
+            'pending_maintenance' => MaintenanceRecord::where('status', '!=', 'Completed')->count(),
         ];
 
         // --- Recent Activities ---
-        $recentActivities = MaintenanceRecord::with('equipment', 'user')
+        $recentActivities = MaintenanceRecord::where('type', 'Corrective')
+                            ->whereIn('status', ['Pending', 'In Progress'])
+                            ->with('equipment', 'user')
                             ->latest('date_reported')
                             ->limit(5)
                             ->get();
         
         // --- Announcements ---
-        $announcements = Announcement::latest()->limit(3)->get();
+        $announcements = \App\Models\Announcement::latest()->limit(3)->get();
 
-        // --- Preventive Maintenance ---
+        // --- Upcoming Preventive Maintenance ---
         $upcomingPM = MaintenanceRecord::where('type', 'Preventive')
                                 ->where('status', 'Pending')
+                                ->whereNotNull('scheduled_for')
                                 ->where('scheduled_for', '>=', now()->toDateString())
                                 ->orderBy('scheduled_for', 'asc')
-                                ->with('equipment') // Eager load equipment to prevent extra queries
+                                ->with(['equipment.lab', 'user'])
                                 ->limit(5)
                                 ->get();
         
-        // Pass ALL the data to the view, including the new variable
+        // Pass all the correct data to the view
         return view('dashboard', compact('stats', 'recentActivities', 'announcements', 'upcomingPM'));
     }
 }

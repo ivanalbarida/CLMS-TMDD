@@ -33,24 +33,34 @@ class MaintenanceController extends Controller
 
     public function store(Request $request)
     {
+        // 1. ADD FULL VALIDATION FOR ALL FIELDS FROM BOTH FORMS
         $request->validate([
             'equipment_ids' => 'required|array|min:1', 
-            'equipment_ids.*' => 'exists:equipment,id', 
+            'equipment_ids.*' => 'exists:equipment,id',
+            'type' => 'required|in:Corrective,Preventive',
+            'user_id' => 'required|exists:users,id',
+            'date_reported' => 'required|date',
+            'issue_description' => 'required|string',
+            'status' => 'required|string',
+            'scheduled_for' => 'nullable|date', // This is for PM tasks
         ]);
 
         DB::transaction(function () use ($request) {
+            // 2. ADD ALL FILLABLE FIELDS TO THE CREATE METHOD
             $maintenanceRecord = MaintenanceRecord::create([
                 'type' => $request->type,
                 'user_id' => $request->user_id,
                 'date_reported' => $request->date_reported,
                 'issue_description' => $request->issue_description,
                 'status' => $request->status,
+                'scheduled_for' => $request->scheduled_for, // This was the missing field
             ]);
 
+            // This part is already correct
             $maintenanceRecord->equipment()->attach($request->equipment_ids);
         });
 
-        return redirect()->route('maintenance.index')->with('success', 'Maintenance log created successfully for multiple items.');
+        return redirect()->route('maintenance.index')->with('success', 'Maintenance log created successfully.');
     }
 
     /**
@@ -111,5 +121,15 @@ class MaintenanceController extends Controller
         $technicians = \App\Models\User::whereIn('role', ['Admin', 'Technician'])->orderBy('name')->get();
         
         return view('maintenance.schedule', compact('labs', 'technicians'));
+    }
+
+    public function complete(MaintenanceRecord $maintenance)
+    {
+        $maintenance->update([
+            'status' => 'Completed',
+            'date_completed' => now(),
+        ]);
+
+        return redirect()->route('maintenance.index')->with('success', 'Maintenance log marked as complete.');
     }
 }

@@ -11,8 +11,7 @@ class MaintenanceRecord extends Model
 
     protected $fillable = [
         'type',
-        'equipment_id',
-        'user_id', // This will be the assigned technician
+        'user_id',
         'issue_description',
         'action_taken',
         'date_reported',

@@ -49,23 +49,21 @@
                         <div class="border-t pt-6 space-y-6">
                             <h3 class="block font-medium text-lg text-gray-800">3. Provide PM Details</h3>
                             
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <!-- Scheduled For Date -->
-                                <div>
-                                    <label for="scheduled_for" class="block font-medium text-sm text-gray-700">Scheduled For Date</label>
-                                    <input type="date" id="scheduled_for" name="scheduled_for" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
-                                </div>
-                                
-                                <!-- Assigned Technician -->
-                                <div>
-                                    <label for="user_id" class="block font-medium text-sm text-gray-700">Assign To</label>
-                                    <select id="user_id" name="user_id" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
-                                        <option value="">-- Select Technician --</option>
-                                        @foreach($technicians as $tech)
-                                        <option value="{{ $tech->id }}">{{ $tech->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                            <!-- Scheduled For Date -->
+                            <div>
+                                <label for="scheduled_for" class="block font-medium text-sm text-gray-700">Scheduled For Date</label>
+                                <input type="date" id="scheduled_for" name="scheduled_for" required class="block mt-1 w-full md:w-1/2 border-gray-300 rounded-md shadow-sm">
+                            </div>
+                            
+                            <!-- Assigned Technician -->
+                            <div>
+                                <label for="user_id" class="block font-medium text-sm text-gray-700">Assign To</label>
+                                <select id="user_id" name="user_id" required class="block mt-1 w-full md:w-1/2 border-gray-300 rounded-md shadow-sm">
+                                    <option value="">-- Select Technician --</option>
+                                    @foreach($technicians as $tech)
+                                    <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                    @endforeach
+                                </select>
                             </div>
 
                             <!-- PM Tasks / Notes -->

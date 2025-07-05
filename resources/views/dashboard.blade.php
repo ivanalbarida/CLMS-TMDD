@@ -88,18 +88,19 @@
                             <div class="space-y-4">
                                 @forelse($recentActivities as $activity)
                                     <div class="text-sm">
-                                        <p class="font-semibold">
-                                            <a href="{{ route('equipment.show', $activity->equipment->id) }}" class="text-indigo-600 hover:underline">
-                                                {{ $activity->equipment->tag_number }}
-                                            </a>
-                                            reported as <span class="font-bold">{{ $activity->status }}</span>
-                                        </p>
-                                        <p class="text-gray-500 text-xs">
-                                            By {{ $activity->user->name }} on {{ \Carbon\Carbon::parse($activity->date_reported)->format('M d, Y') }}
+                                        <div class="font-semibold">
+                                            @foreach($activity->equipment as $pc)
+                                                <a href="{{ route('equipment.show', $pc->id) }}" class="text-indigo-600 hover:underline block">
+                                                    {{ $pc->tag_number }} ({{ $pc->lab->lab_name }})
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                        <p class="text-xs text-gray-500 mt-1">
+                                            Reported as <span class="font-bold">{{ $activity->status }}</span> by {{ $activity->user->name }} on {{ \Carbon\Carbon::parse($activity->date_reported)->format('M d, Y') }}
                                         </p>
                                     </div>
                                 @empty
-                                    <p class="text-sm text-gray-500">No recent activities.</p>
+                                    <p class="text-sm text-gray-500">No new issues reported.</p>
                                 @endforelse
                             </div>
                         </div>
@@ -111,10 +112,15 @@
                             <div class="space-y-4">
                                 @forelse($upcomingPM as $pm)
                                     <div class="text-sm">
-                                        <p class="font-semibold">
-                                            <a href="{{ route('equipment.show', $pm->equipment->id) }}" class="text-indigo-600 hover:underline">
-                                                {{ $pm->equipment->tag_number }} ({{ $pm->equipment->lab->lab_name }})
-                                            </a>
+                                        <div class="font-semibold">
+                                            @foreach($pm->equipment as $pc)
+                                                <a href="{{ route('equipment.show', $pc->id) }}" class="text-indigo-600 hover:underline block">
+                                                    {{ $pc->tag_number }} ({{ $pc->lab->lab_name }})
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                        <p class="text-gray-500 text-xs">
+                                            Scheduled for: <span class="font-bold">{{ \Carbon\Carbon::parse($pm->scheduled_for)->format('M d, Y') }}</span>
                                         </p>
                                         <p class="text-gray-500 text-xs">
                                             Scheduled for: <span class="font-bold">{{ \Carbon\Carbon::parse($pm->scheduled_for)->format('M d, Y') }}</span>

@@ -47,6 +47,13 @@
                         <!-- Step 3: Log Details (This is the new, complete section) -->
                         <div class="border-t pt-6 space-y-6">
                             <h3 class="block font-medium text-lg text-gray-800">3. Provide Log Details</h3>
+
+                            @if($maintenance->type == 'Preventive')
+                            <div>
+                                <label for="scheduled_for" class="block font-medium text-sm text-gray-700">Scheduled For Date</label>
+                                <input type="date" id="scheduled_for" name="scheduled_for" value="{{ old('scheduled_for', $maintenance->scheduled_for) }}" class="block mt-1 w-full ...">
+                            </div>
+                            @endif
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <!-- Assigned Technician -->
@@ -82,20 +89,27 @@
                                 <textarea id="action_taken" name="action_taken" rows="4" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">{{ old('action_taken', $maintenance->action_taken) }}</textarea>
                             </div>
 
-                            <!-- Date Completed -->
-                            <div>
-                                <label for="date_completed" class="block font-medium text-sm text-gray-700">Date Completed</label>
-                                <input type="date" id="date_completed" name="date_completed" value="{{ old('date_completed', $maintenance->date_completed) }}" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
-                            </div>
                         </div>
                     </div>
 
-                    <div class="p-6 bg-gray-50 flex justify-end">
-                        <a href="{{ route('maintenance.index') }}" class="text-sm text-gray-600 hover:text-gray-900 mr-4 self-center">Cancel</a>
-                        <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
-                            Update Log
-                        </button>
-                    </div>
+                   <div class="mt-6 flex items-center justify-end space-x-4">
+                    <a href="{{ route('maintenance.index') }}" class="text-sm text-gray-600 hover:text-gray-900">Cancel</a>
+
+                    @if ($maintenance->status != 'Completed')
+                        <!-- "Update Details" button submits the main form -->
+                            <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
+                                Update Details
+                            </button>
+
+                        <!-- "Mark as Complete" is now a simple link styled as a button -->
+                        <a href="{{ route('maintenance.complete', $maintenance->id) }}"
+                        class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-500 active:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                        onclick="return confirm('Are you sure you want to mark this task as complete?')"
+                        >
+                            Mark as Complete
+                        </a>
+                    @endif
+                </div>
                 </form>
             </div>
         </div>
