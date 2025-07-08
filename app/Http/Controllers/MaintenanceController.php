@@ -33,7 +33,6 @@ class MaintenanceController extends Controller
 
     public function store(Request $request)
     {
-        // 1. ADD FULL VALIDATION FOR ALL FIELDS FROM BOTH FORMS
         $request->validate([
             'equipment_ids' => 'required|array|min:1', 
             'equipment_ids.*' => 'exists:equipment,id',
@@ -42,21 +41,19 @@ class MaintenanceController extends Controller
             'date_reported' => 'required|date',
             'issue_description' => 'required|string',
             'status' => 'required|string',
-            'scheduled_for' => 'nullable|date', // This is for PM tasks
+            'scheduled_for' => 'nullable|date',
         ]);
 
         DB::transaction(function () use ($request) {
-            // 2. ADD ALL FILLABLE FIELDS TO THE CREATE METHOD
             $maintenanceRecord = MaintenanceRecord::create([
                 'type' => $request->type,
                 'user_id' => $request->user_id,
                 'date_reported' => $request->date_reported,
                 'issue_description' => $request->issue_description,
                 'status' => $request->status,
-                'scheduled_for' => $request->scheduled_for, // This was the missing field
+                'scheduled_for' => $request->scheduled_for,
             ]);
 
-            // This part is already correct
             $maintenanceRecord->equipment()->attach($request->equipment_ids);
         });
 

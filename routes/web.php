@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DashboardController;
@@ -10,6 +11,8 @@ use App\Http\Controllers\CsvImportController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\SoftwareChecklistController;
+use App\Http\Controllers\PmTaskController;
+use App\Http\Controllers\PreventiveChecklistController;
 
 // 1. Publicly Accessible Routes
 Route::get('/', function () {
@@ -44,6 +47,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/maintenance/{maintenance}/complete', [MaintenanceController::class, 'complete'])->name('maintenance.complete');
 
+    Route::get('/preventive-checklist', [PreventiveChecklistController::class, 'index'])->name('pm-checklist.index');
+
+    Route::middleware('auth:sanctum')->post('/pm-checklist/toggle', [PreventiveChecklistController::class, 'toggleCompletion']);
+
     // 3. Admin-Only Routes
     Route::middleware('is.admin')->group(function () {
         
@@ -61,5 +68,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Route::resource('programs', ProgramController::class);
         // Route::resource('software', SoftwareController::class);
         // Route::resource('software-sets', SoftwareSetController::class);
+        Route::resource('pm-tasks', PmTaskController::class);
     });
 });
