@@ -9,14 +9,14 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up()
+    public function up(): void
     {
-    Schema::create('labs', function (Blueprint $table) {
-        $table->id();
-        $table->string('lab_name');
-        $table->string('building_name');
-        $table->timestamps();
-    });
+        Schema::create('labs', function (Blueprint $table) {
+            $table->id();
+            $table->string('lab_name')->unique(); // <--- This line was changed: added ->unique()
+            $table->string('building_name'); // This line remains the same
+            $table->timestamps();
+        });
     }
 
     /**

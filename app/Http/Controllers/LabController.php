@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Lab;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule; // This line is crucial for the update method
 
 class LabController extends Controller
 {
@@ -13,8 +13,8 @@ class LabController extends Controller
      */
     public function index()
     {
-        $labs = Lab::all(); // Get all labs from the database
-        return view('labs.index', compact('labs')); // Send the data to the view
+        $labs = Lab::all();
+        return view('labs.index', compact('labs'));
     }
 
     /**
@@ -22,7 +22,7 @@ class LabController extends Controller
      */
     public function create()
     {
-        return view('labs.create'); // Just show the form
+        return view('labs.create');
     }
 
     /**
@@ -30,19 +30,20 @@ class LabController extends Controller
      */
     public function store(Request $request)
     {
-        // Validate the incoming data
+        // Validate the incoming data with unique constraint and custom message
         $request->validate([
-            'lab_name' => 'required|string|max:255',
+            'lab_name' => 'required|string|max:255|unique:labs,lab_name', // Unique rule
             'building_name' => 'required|string|max:255',
+        ], [
+            // Custom validation message for uniqueness
+            'lab_name.unique' => 'The Lab Name / Room # already exists. Please choose a different one.',
         ]);
 
-        // Create the new lab
         Lab::create([
             'lab_name' => $request->lab_name,
             'building_name' => $request->building_name,
         ]);
 
-        // Redirect back to the list page with a success message
         return redirect()->route('labs.index')->with('success', 'Lab created successfully.');
     }
 
@@ -51,29 +52,40 @@ class LabController extends Controller
      */
     public function show(string $id)
     {
-        //
+        // This method is currently empty, keep it as is unless you need to display a single lab
     }
 
     /**
      * Show the form for editing the specified lab.
      */
-    public function edit(Lab $lab) // <-- THE FIX
+    public function edit(Lab $lab)
     {
-        // Now, Laravel automatically provides the $lab object.
         return view('labs.edit', compact('lab'));
     }
 
     /**
      * Update the specified lab in storage.
      */
-    public function update(Request $request, Lab $lab) // <-- PROACTIVE FIX
+    public function update(Request $request, Lab $lab)
     {
+        // Validate the incoming data with unique constraint (ignoring the current lab's ID) and custom message
         $request->validate([
-            'lab_name' => 'required|string|max:255',
+            'lab_name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('labs', 'lab_name')->ignore($lab->id), // Unique rule ignoring current ID
+            ],
             'building_name' => 'required|string|max:255',
+        ], [
+            // Custom validation message for uniqueness
+            'lab_name.unique' => 'The Lab Name / Room # already exists. Please choose a different one.',
         ]);
 
-        $lab->update($request->all());
+        $lab->update([
+            'lab_name' => $request->lab_name,
+            'building_name' => $request->building_name,
+        ]);
 
         return redirect()->route('labs.index')->with('success', 'Lab updated successfully.');
     }
@@ -84,7 +96,6 @@ class LabController extends Controller
     public function destroy(Lab $lab)
     {
         $lab->delete();
-        
         return redirect()->route('labs.index')->with('success', 'Lab deleted successfully.');
     }
 }

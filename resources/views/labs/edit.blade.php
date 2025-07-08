@@ -10,19 +10,27 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <form method="POST" action="{{ route('labs.update', $lab->id) }}">
-                        @csrf <!-- Security Token -->
-                        @method('PUT') <!-- Specify that this is an UPDATE operation -->
+                        @csrf
+                        @method('PUT')
 
                         <!-- Lab Name -->
                         <div>
                             <label for="lab_name">Lab Name / Room #</label>
                             <input id="lab_name" class="block mt-1 w-full" type="text" name="lab_name" value="{{ old('lab_name', $lab->lab_name) }}" required autofocus />
+                            {{-- Displays validation error for lab_name --}}
+                            @error('lab_name')
+                                <span style="color: red; font-size: 0.9em; display: block; margin-top: 5px;">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <!-- Building Name -->
                         <div class="mt-4">
                             <label for="building_name">Building Name</label>
                             <input id="building_name" class="block mt-1 w-full" type="text" name="building_name" value="{{ old('building_name', $lab->building_name) }}" required />
+                            {{-- Displays validation error for building_name --}}
+                            @error('building_name')
+                                <span style="color: red; font-size: 0.9em; display: block; margin-top: 5px;">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div class="flex items-center justify-end mt-4">
