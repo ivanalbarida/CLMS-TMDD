@@ -28,7 +28,8 @@ class EquipmentController extends Controller
     public function create()
     {
         $labs = Lab::all(); // Get all labs for the dropdown
-        $statuses = ['Working', 'For Repair', 'In Use', 'Retired']; // For status dropdown
+        // MODIFIED: 'In Use' removed from the statuses array for create method
+        $statuses = ['Working', 'For Repair', 'Retired']; // For status dropdown
         // Fixed list of component types based on CSV and requirements
         $componentTypes = ['Monitor', 'OS', 'Processor', 'CPU Serial Num', 'Motherboard', 'Memory', 'Storage', 'Video Card', 'PSU', 'Router', 'Switch', 'Other'];
 
@@ -104,7 +105,8 @@ class EquipmentController extends Controller
     {
         $equipment->load('components'); // Load components to edit them
         $labs = Lab::all();
-        $statuses = ['Working', 'For Repair', 'In Use', 'Retired'];
+        // MODIFIED: 'In Use' removed from the statuses array for edit method
+        $statuses = ['Working', 'For Repair', 'Retired'];
         $componentTypes = ['Monitor', 'OS', 'Processor', 'CPU Serial Num', 'Motherboard', 'Memory', 'Storage', 'Video Card', 'PSU', 'Router', 'Switch', 'Other'];
 
         return view('equipment.edit', compact('equipment', 'labs', 'statuses', 'componentTypes'));

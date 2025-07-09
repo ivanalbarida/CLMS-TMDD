@@ -11,7 +11,6 @@
                 @csrf
                 @method('PUT')
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <!-- Main Equipment Details -->
                     <div class="p-6 text-gray-900">
                         <h3 class="text-lg font-bold">Main Details</h3>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
@@ -33,7 +32,9 @@
                                 <label for="status">Status</label>
                                 <select name="status" id="status" class="block mt-1 w-full" required>
                                     @foreach ($statuses as $status)
-                                        <option value="{{ $status }}" @selected(old('status', $equipment->status) == $status)>{{ $status }}</option>
+                                        @if ($status !== 'In Use') {{-- This line conditionally removes 'In Use' --}}
+                                            <option value="{{ $status }}" @selected(old('status', $equipment->status) == $status)>{{ $status }}</option>
+                                        @endif
                                     @endforeach
                                 </select>
                             </div>
@@ -44,7 +45,6 @@
                         </div>
                     </div>
 
-                    <!-- Components Section -->
                     <div class="p-6 text-gray-900 border-t">
                         <div class="flex justify-between items-center">
                             <h3 class="text-lg font-bold">Components</h3>
