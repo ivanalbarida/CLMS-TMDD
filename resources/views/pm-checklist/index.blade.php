@@ -27,28 +27,31 @@
             <!-- The Checklist -->
             <div x-show="selectedLabId" x-cloak class="bg-white p-6 rounded-lg shadow space-y-6">
                 @forelse ($tasksDueToday as $frequency => $tasks)
-                    <div>
-                        <h4 class="font-bold text-lg border-b pb-2 mb-3">{{ $frequency }} Tasks</h4>
-                        <div class="space-y-3">
-                            @foreach($tasks as $task)
-                                @php
-                                    // The check for completion is now just for visual state, logic is in controller
-                                    $isComplete = in_array($task->id, $completions);
-                                @endphp
-                                <label class="flex items-center p-3 rounded-md transition bg-gray-50 hover:bg-gray-100">
-                                    <input type="checkbox" @change="toggleCompletion({{ $task->id }}, '{{ $today->format('Y-m-d') }}', $event.target.checked)"
-                                           class="h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
-                                    <span class="ml-3 text-sm">{{ $task->task_description }}</span>
-                                </label>
-                            @endforeach
-                        </div>
+    <div>
+        <h4 class="font-bold text-lg border-b pb-2 mb-3">{{ $frequency }} Tasks</h4>
+        <div class="space-y-3">
+            @foreach($tasks as $task)
+                            @php
+                                // Check if the current task's ID is in the completed list from the controller
+                                $isComplete = in_array($task->id, $completedTaskIds);
+                            @endphp
+                            <label class="flex items-center p-3 rounded-md transition {{ $isComplete ? 'bg-green-100 text-gray-500' : 'bg-gray-50 hover:bg-gray-100' }}">
+                                <input type="checkbox"
+                                    @change="toggleCompletion($event, {{ $task->id }}, '{{ $today->format('Y-m-d') }}')"
+                                    class="h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                    {{ $isComplete ? 'checked disabled' : '' }}
+                                >
+                                <span class="ml-3 text-sm">{{ $task->task_description }}</span>
+                            </label>
+                        @endforeach
                     </div>
-                @empty
-                    <div class="text-center py-8">
-                        <p class="text-green-600 font-semibold">All tasks for today are complete!</p>
-                        <p class="text-gray-500 text-sm">Or no tasks were scheduled for today.</p>
-                    </div>
-                @endforelse
+                </div>
+            @empty
+                <div class="text-center py-8">
+                    <p class="text-green-600 font-semibold">All tasks for today are complete!</p>
+                    <p class="text-gray-500 text-sm">Or no tasks were scheduled for today.</p>
+                </div>
+            @endforelse
             </div>
 
             <!-- Message to select a lab -->
@@ -58,8 +61,71 @@
         </div>
     </div>
     
-    <!-- The JavaScript part remains the same -->
     <script>
-        function pmChecklist() { ... }
+        function pmChecklist() {
+            return {
+                selectedLabId: '{{ $selectedLabId ?? '' }}',
+                
+                changeLab(labId) {
+                    let url = `{{ route('pm-checklist.index') }}`;
+                    if (labId) {
+                        url += `?lab_id=${labId}`;
+                    } else {
+                        // If no lab is selected, go back to the base URL
+                        window.location.href = url;
+                    }
+                    window.location.href = url;
+                },
+
+                toggleCompletion(event, taskId, date) {
+                const checkbox = event.currentTarget;
+                const isComplete = checkbox.checked;
+                const label = checkbox.closest('label');
+
+                // Give visual feedback that something is happening
+                label.classList.add('opacity-50');
+                // Temporarily disable to prevent double clicks
+                checkbox.disabled = true;
+
+                fetch('{{ route("pm-checklist.toggle") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        pm_task_id: taskId,
+                        lab_id: this.selectedLabId,
+                        date: date,
+                        is_complete: isComplete
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Server error');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // SUCCESS: Re-enable the checkbox so it can be changed again
+                        checkbox.disabled = false;
+                    } else {
+                        throw new Error('API returned success:false');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred. The page will now reload to ensure data consistency.');
+                    // On a critical error, reloading the page is the safest way
+                    // to ensure the UI matches the database state.
+                    window.location.reload();
+                })
+                .finally(() => {
+                    // ALWAYS remove the loading state after the request is done
+                    label.classList.remove('opacity-50');
+                });
+            }
+            }
+        }
     </script>
 </x-app-layout>
