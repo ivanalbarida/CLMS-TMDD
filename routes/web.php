@@ -53,6 +53,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/pm-checklist/toggle', [PreventiveChecklistController::class, 'toggleCompletion'])->name('pm-checklist.toggle');
 
+    Route::resource('users', UserController::class);
+    Route::get('/users/{user}/activity', [UserController::class, 'activity'])->name('users.activity');
+
     // 3. Admin-Only Routes
     Route::middleware('is.admin')->group(function () {
         
