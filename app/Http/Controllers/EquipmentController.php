@@ -91,19 +91,41 @@ class EquipmentController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Equipment $equipment)
+    public function show(Request $request, Equipment $equipment) // <-- Add Request $request
     {
-        // Eager load the standard relationships
+        // Load the standard relationships
         $equipment->load('lab', 'components');
 
-        // Fetch the activity history for THIS specific piece of equipment
-        $history = \App\Models\ActivityLog::where('subject_type', 'App\Models\Equipment')
-                                        ->where('subject_id', $equipment->id)
-                                        ->with('user') // Eager load the user who performed the action
-                                        ->latest() // Show newest first
-                                        ->paginate(15);
+        // --- FILTERING LOGIC ---
+        // Start building the query for the activity history
+        $historyQuery = \App\Models\ActivityLog::where('subject_type', 'App\Models\Equipment')
+                                            ->where('subject_id', $equipment->id)
+                                            ->with('user'); // Eager load the user
 
-        return view('equipment.show', compact('equipment', 'history'));
+        // Apply a "start date" filter if provided
+        if ($request->filled('start_date')) {
+            $historyQuery->where('created_at', '>=', $request->start_date);
+        }
+
+        // Apply an "end date" filter if provided
+        if ($request->filled('end_date')) {
+            // Add a day to the end date to include all events on that day
+            $endDate = \Carbon\Carbon::parse($request->end_date)->addDay();
+            $historyQuery->where('created_at', '<', $endDate);
+        }
+
+        // Apply an "action type" filter if provided
+        if ($request->filled('action_type')) {
+            $historyQuery->where('action_type', $request->action_type);
+        }
+
+        // Execute the final query with ordering and pagination
+        $history = $historyQuery->latest()->paginate(15)->withQueryString(); // withQueryString appends filters to pagination links
+
+        // Get a list of all possible action types for the dropdown
+        $actionTypes = ['CREATED', 'UPDATED', 'DELETED', 'MAINTENANCE_LOGGED', 'MAINTENANCE_COMPLETED', 'COMPLETED_PM_TASK', 'UNCHECKED_PM'];
+
+        return view('equipment.show', compact('equipment', 'history', 'actionTypes'));
     }
 
     /**
