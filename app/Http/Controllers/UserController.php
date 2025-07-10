@@ -41,12 +41,18 @@ class UserController extends Controller
             'role' => ['required', 'string', 'in:Admin,Technician,Custodian'],
         ]);
 
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'username' => $request->username,
             'password' => Hash::make($request->password),
             'role' => $request->role,
         ]);
+
+        log_activity(
+            'CREATED', 
+            $user, 
+            "Created new user: {$user->name} ({$user->role})" 
+        );
 
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
@@ -110,5 +116,13 @@ class UserController extends Controller
                                 ->paginate(25);
 
         return view('users.activity', compact('user', 'activities'));
+    }
+
+    /**
+     * Display the specified user. We redirect to the edit page instead.
+     */
+    public function show(User $user)
+    {
+        return redirect()->route('users.edit', $user->id);
     }
 }

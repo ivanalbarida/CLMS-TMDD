@@ -31,11 +31,16 @@
                                 <td class="px-6 py-4 text-right ...">
                                     <a href="{{ route('users.activity', $user->id) }}" class="text-blue-600 hover:text-blue-900">Activity</a>
                                     <a href="{{ route('users.edit', $user->id) }}" class="text-indigo-600 ...">Edit</a>
-                                    <form action="{{ route('users.destroy', $user->id) }}" ...>
-                                    <form action="{{ route('users.destroy', $user->id) }}" method="POST" class="inline-block ml-4" onsubmit="return confirm('Are you sure?')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="text-red-600 ...">Delete</button>
+                                    <form id="delete-form-{{ $user->id }}" action="{{ route('users.destroy', $user->id) }}" method="POST" class="hidden">
+                                        @csrf
+                                        @method('DELETE')
                                     </form>
+                                    <a href="#"
+                                    class="text-red-600 hover:text-red-900 ml-4"
+                                    onclick="event.preventDefault(); if(confirm('Are you sure you want to delete this user?')) { document.getElementById('delete-form-{{ $user->id }}').submit(); }"
+                                    >
+                                        Delete
+                                    </a>
                                 </td>
                             </tr>
                             @endforeach
