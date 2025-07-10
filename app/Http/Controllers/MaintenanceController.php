@@ -55,6 +55,10 @@ class MaintenanceController extends Controller
             ]);
 
             $maintenanceRecord->equipment()->attach($request->equipment_ids);
+
+            foreach ($maintenanceRecord->equipment as $pc) {
+                log_activity('MAINTENANCE_LOGGED', $pc, "Corrective maintenance logged by {$maintenanceRecord->user->name}. Issue: {$maintenanceRecord->issue_description}");
+            }
         });
 
         return redirect()->route('maintenance.index')->with('success', 'Maintenance log created successfully.');
@@ -126,6 +130,10 @@ class MaintenanceController extends Controller
             'status' => 'Completed',
             'date_completed' => now(),
         ]);
+
+        foreach ($maintenance->equipment as $pc) {
+            log_activity('MAINTENANCE_COMPLETED', $pc, "Maintenance marked as complete by " . Auth::user()->name);
+        }
 
         return redirect()->route('maintenance.index')->with('success', 'Maintenance log marked as complete.');
     }

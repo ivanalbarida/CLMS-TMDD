@@ -69,6 +69,8 @@ class EquipmentController extends Controller
                 'status' => $request->status,
                 'notes' => $request->notes,
             ]);
+            
+            log_activity('CREATED', $equipment, "Created new equipment: {$equipment->tag_number}");
 
             // 2. Loop through and create the components
             foreach ($request->components as $componentData) {
@@ -90,13 +92,19 @@ class EquipmentController extends Controller
      * Display the specified resource.
      */
     public function show(Equipment $equipment)
-        {
-            // Laravel has already found the $equipment object for us from the ID in the URL.
-            // We just need to load its relationships before sending it to the view.
-            $equipment->load('lab', 'components');
-            
-            return view('equipment.show', compact('equipment'));
-        }
+    {
+        // Eager load the standard relationships
+        $equipment->load('lab', 'components');
+
+        // Fetch the activity history for THIS specific piece of equipment
+        $history = \App\Models\ActivityLog::where('subject_type', 'App\Models\Equipment')
+                                        ->where('subject_id', $equipment->id)
+                                        ->with('user') // Eager load the user who performed the action
+                                        ->latest() // Show newest first
+                                        ->paginate(15);
+
+        return view('equipment.show', compact('equipment', 'history'));
+    }
 
     /**
      * Show the form for editing the specified resource.
@@ -135,6 +143,8 @@ class EquipmentController extends Controller
             // 1. Update the main equipment details
             $equipment->update($request->only('tag_number', 'lab_id', 'status', 'notes'));
 
+            log_activity('UPDATED', $equipment, "Updated details for equipment: {$equipment->tag_number}");
+
             // 2. Sync Components: Delete old ones, update existing, add new ones
             // A simple way is to delete all old components and re-create them from the form.
             $equipment->components()->delete();
@@ -162,6 +172,9 @@ class EquipmentController extends Controller
     {
         // The database is set up with cascading deletes,
         // so deleting the equipment will also delete its components and maintenance records.
+
+        log_activity('DELETED', $equipment, "Deleted equipment: {$equipment->tag_number}");
+
         $equipment->delete();
 
         return redirect()->route('equipment.index')->with('success', 'Equipment deleted successfully.');
