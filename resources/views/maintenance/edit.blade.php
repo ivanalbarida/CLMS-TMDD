@@ -5,6 +5,10 @@
         </h2>
     </x-slot>
 
+    @php
+        $isCompleted = ($maintenance->status == 'Completed');
+    @endphp
+
     <div class="py-12" x-data="{ selectedLab: '{{ $maintenance->equipment->first()->lab_id ?? '' }}' }">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
@@ -75,6 +79,11 @@
                                         @endforeach
                                     </select>
                                 </div>
+                            </div>
+
+                            <div>
+                                <label for="date_started" class="block font-medium text-sm text-gray-700">Date Started</label>
+                                <input type="date" id="date_started" name="date_started" value="{{ old('date_started', $maintenance->date_started) }}" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" {{ $isCompleted ? 'disabled' : '' }}>
                             </div>
 
                             <!-- Issue Description -->

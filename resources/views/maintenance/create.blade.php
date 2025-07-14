@@ -5,9 +5,20 @@
     <div class="py-12" x-data="{ selectedLab: '' }">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <form method="POST" action="{{ route('maintenance.store') }}">
+                <form method="POST" action="{{ route('maintenance.store') }}" x-data="{ status: '{{ old('status', 'Pending') }}' }">
                     @csrf
                     <input type="hidden" name="type" value="Corrective">
+
+                    @if ($errors->any())
+                        <div class="p-4 mx-6 mt-6 bg-red-100 border-l-4 border-red-500 text-red-700">
+                            <h3 class="font-bold">Error</h3>
+                            <ul class="mt-2 list-disc list-inside">
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
                     
                     <div class="p-6 space-y-6">
                         <!-- Step 1: Select a Lab -->
@@ -61,7 +72,7 @@
                                 <!-- Status -->
                                 <div>
                                     <label for="status" class="block font-medium text-sm text-gray-700">Status</label>
-                                    <select id="status" name="status" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                                    <select id="status" name="status" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" x-model="status">
                                         @foreach($statuses as $status)
                                         <option value="{{ $status }}">{{ $status }}</option>
                                         @endforeach
@@ -77,6 +88,18 @@
                                 <label for="issue_description" class="block font-medium text-sm text-gray-700">Issue Description</label>
                                 <textarea id="issue_description" name="issue_description" rows="4" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm"></textarea>
                             </div>
+
+                            <div x-show="status === 'Completed'" x-cloak class="space-y-6">
+                                <div>
+                                    <label for="action_taken" class="block font-medium text-sm text-gray-700">Action Taken*</label>
+                                    <textarea id="action_taken" name="action_taken" rows="4" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" :required="status === 'Completed'">{{ old('action_taken') }}</textarea>
+                                </div>
+                                <div>
+                                    <label for="date_completed" class="block font-medium text-sm text-gray-700">Date Completed*</label>
+                                    <input type="date" id="date_completed" name="date_completed" value="{{ old('date_completed') }}" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" :required="status === 'Completed'">
+                                </div>
+                            </div>
+                            
                         </div>
 
                     </div>

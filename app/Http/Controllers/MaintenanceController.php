@@ -42,22 +42,26 @@ class MaintenanceController extends Controller
             'issue_description' => 'required|string',
             'status' => 'required|string',
             'scheduled_for' => 'nullable|date',
+            
+            // Add conditional validation
+            'action_taken' => 'required_if:status,Completed|nullable|string',
+            'date_completed' => 'required_if:status,Completed|nullable|date',
         ]);
 
         DB::transaction(function () use ($request) {
-            $maintenanceRecord = MaintenanceRecord::create([
-                'type' => $request->type,
-                'user_id' => $request->user_id,
-                'date_reported' => $request->date_reported,
-                'issue_description' => $request->issue_description,
-                'status' => $request->status,
-                'scheduled_for' => $request->scheduled_for,
-            ]);
+            $dataToCreate = $request->except(['_token', 'equipment_ids']);
+            
+            $maintenanceRecord = MaintenanceRecord::create($dataToCreate);
 
             $maintenanceRecord->equipment()->attach($request->equipment_ids);
 
+            // Log the activity
             foreach ($maintenanceRecord->equipment as $pc) {
-                log_activity('MAINTENANCE_LOGGED', $pc, "Corrective maintenance logged by {$maintenanceRecord->user->name}. Issue: {$maintenanceRecord->issue_description}");
+                log_activity(
+                    'MAINTENANCE_LOGGED',
+                    $pc,
+                    "{$request->type} maintenance logged by " . Auth::user()->name . ". Issue: {$request->issue_description}"
+                );
             }
         });
 
@@ -93,12 +97,33 @@ class MaintenanceController extends Controller
      */
     public function update(Request $request, MaintenanceRecord $maintenance)
     {
+        // Add date_started to the validation rules
         $request->validate([
             'equipment_ids' => 'required|array|min:1',
             'equipment_ids.*' => 'exists:equipment,id',
+            'user_id' => 'required|exists:users,id',
+            'status' => 'required|string',
+            'issue_description' => 'required|string',
+            'action_taken' => 'nullable|string',
+            'date_started' => 'nullable|date', // <-- ADD VALIDATION
         ]);
 
+        // --- Activity Logging Logic ---
+        // Check if the 'date_started' is being set for the first time
+        if ($request->filled('date_started') && is_null($maintenance->date_started)) {
+            // Log this action for each piece of equipment involved
+            foreach ($maintenance->equipment as $pc) {
+                log_activity(
+                    'MAINTENANCE_STARTED',
+                    $pc,
+                    "Work started on '{$maintenance->issue_description}' by " . Auth::user()->name
+                );
+            }
+        }
+        // --- End of Logging Logic ---
+
         DB::transaction(function () use ($request, $maintenance) {
+            // The update() call will now automatically handle the new 'date_started' field
             $maintenance->update($request->except(['_token', '_method', 'equipment_ids']));
             $maintenance->equipment()->sync($request->equipment_ids);
         });

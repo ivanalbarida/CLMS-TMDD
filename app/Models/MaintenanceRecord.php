@@ -16,6 +16,7 @@ class MaintenanceRecord extends Model
         'action_taken',
         'date_reported',
         'scheduled_for',
+        'date_started', 
         'status',
         'date_completed',
     ];
