@@ -44,7 +44,7 @@ class LabController extends Controller
             'building_name' => $request->building_name,
         ]);
 
-        return redirect()->route('labs.index')->with('success', 'Lab created successfully.');
+        return redirect()->route('equipment.index')->with('success', 'Lab created successfully.');
     }
 
     /**
@@ -87,7 +87,7 @@ class LabController extends Controller
             'building_name' => $request->building_name,
         ]);
 
-        return redirect()->route('labs.index')->with('success', 'Lab updated successfully.');
+        return redirect()->route('equipment.index')->with('success', 'Lab updated successfully.');
     }
 
     /**
@@ -96,6 +96,6 @@ class LabController extends Controller
     public function destroy(Lab $lab)
     {
         $lab->delete();
-        return redirect()->route('labs.index')->with('success', 'Lab deleted successfully.');
+        return redirect()->route('equipment.index')->with('success', 'Lab deleted successfully.');
     }
 }

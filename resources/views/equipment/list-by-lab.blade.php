@@ -46,6 +46,59 @@
                     </table>
                 </div>
             </div>
+
+            <div class="mt-8">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900">
+                        <h3 class="text-lg font-semibold mb-4">Recent Lab Activity</h3>
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Equipment</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @forelse ($labHistory as $log)
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ $log->created_at->format('M d, Y - H:i A') }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold">
+                                        <!-- The 'subject' is the Equipment model in this case -->
+                                        {{ $log->subject->tag_number ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                        {{ $log->user->name ?? 'System' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                            {{ $log->action_type }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-700">
+                                        {{ $log->description }}
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                        No activity has been logged for this lab yet.
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                        <div class="mt-4">
+                            {{ $labHistory->links('pagination::tailwind') }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </x-app-layout>

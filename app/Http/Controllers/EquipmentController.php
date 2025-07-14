@@ -9,6 +9,7 @@ use App\Models\Component;
 use App\Models\Lab;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use App\Models\ActivityLog;
 
 class EquipmentController extends Controller
 {
@@ -204,8 +205,19 @@ class EquipmentController extends Controller
 
     public function showByLab(Lab $lab)
     {
-        // Eager load the equipment and its components for the given lab
+        // Eager load the equipment for the main list
         $lab->load('equipment.components');
-        return view('equipment.list-by-lab', compact('lab'));
+
+        // Get all the IDs of the equipment that belong to this lab
+        $equipmentIdsInLab = $lab->equipment->pluck('id');
+
+        // Now, find all activity logs where the subject is one of those equipment IDs
+        $labHistory = ActivityLog::where('subject_type', 'App\Models\Equipment')
+                                ->whereIn('subject_id', $equipmentIdsInLab)
+                                ->with('user', 'subject') // Eager load the user and the specific equipment
+                                ->latest() // Show newest first
+                                ->paginate(10, ['*'], 'history_page'); // Paginate with a custom page name
+
+        return view('equipment.list-by-lab', compact('lab', 'labHistory'));
     }
 }
