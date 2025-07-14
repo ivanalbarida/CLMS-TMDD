@@ -13,6 +13,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\SoftwareChecklistController;
 use App\Http\Controllers\PmTaskController;
 use App\Http\Controllers\PreventiveChecklistController;
+use App\Http\Controllers\ReportController;
 
 // 1. Publicly Accessible Routes
 Route::get('/', function () {
@@ -74,5 +75,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Route::resource('software', SoftwareController::class);
         // Route::resource('software-sets', SoftwareSetController::class);
         Route::resource('pm-tasks', PmTaskController::class);
+
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
     });
 });

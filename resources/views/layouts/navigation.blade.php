@@ -57,6 +57,11 @@
 
                     {{-- Admin-only Configuration Dropdown Menu --}}
                     @if(Auth::user()->role == 'Admin')
+
+                    <x-nav-link :href="route('reports.index')" :active="request()->routeIs('reports.*')">
+                        {{ __('Reports') }}
+                    </x-nav-link>
+                    
                         <div class="hidden sm:flex sm:items-center sm:ms-6">
                             <x-dropdown align="right" width="48">
                                 <x-slot name="trigger">
