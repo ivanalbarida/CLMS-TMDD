@@ -28,18 +28,20 @@
                                 <td class="px-6 py-4 ...">{{ $user->name }}</td>
                                 <td class="px-6 py-4 ...">{{ $user->username }}</td>
                                 <td class="px-6 py-4 ...">{{ $user->role }}</td>
-                                <td class="px-6 py-4 text-right ...">
-                                    <a href="{{ route('users.activity', $user->id) }}" class="text-blue-600 hover:text-blue-900">Activity</a>
-                                    <a href="{{ route('users.edit', $user->id) }}" class="text-indigo-600 ...">Edit</a>
-                                    <form id="delete-form-{{ $user->id }}" action="{{ route('users.destroy', $user->id) }}" method="POST" class="hidden">
-                                        @csrf
-                                        @method('DELETE')
-                                    </form>
-                                    <a href="#"
-                                    class="text-red-600 hover:text-red-900 ml-4"
-                                    onclick="event.preventDefault(); if(confirm('Are you sure you want to delete this user?')) { document.getElementById('delete-form-{{ $user->id }}').submit(); }"
-                                    >
-                                        Delete
+                                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                    <div class="flex justify-end items-center space-x-4">
+                                        <a href="{{ route('users.activity', $user->id) }}" class="text-blue-600 hover:text-blue-900">Activity</a>
+                                        <a href="{{ route('users.edit', $user->id) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
+                                        
+                                        <!-- We will wrap the form in a div so it's a flex item -->
+                                        <div>
+                                            <form id="delete-form-{{ $user->id }}" action="{{ route('users.destroy', $user->id) }}" method="POST" class="hidden">
+                                                @csrf
+                                                @method('DELETE')
+                                            </form>
+                                            <a href="#" class="text-red-600 hover:text-red-900"
+                                            onclick="event.preventDefault(); if(confirm('Are you sure you want to delete this user?')) { document.getElementById('delete-form-{{ $user->id }}').submit(); }">
+                                                Delete
                                     </a>
                                 </td>
                             </tr>

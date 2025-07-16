@@ -99,20 +99,31 @@ class PreventiveChecklistController extends Controller
             'is_complete' => 'required|boolean',
         ]);
 
+        // Define the attributes to find the record
+        $attributes = [
+            'pm_task_id' => $validated['pm_task_id'],
+            'lab_id' => $validated['lab_id'],
+            'completed_at' => $validated['date'],
+        ];
+
         if ($validated['is_complete']) {
-            PmTaskCompletion::firstOrCreate(
-                [
-                    'pm_task_id' => $validated['pm_task_id'],
-                    'lab_id' => $validated['lab_id'],
-                    'completed_at' => $validated['date'],
-                ],
-                ['user_id' => Auth::id()]
-            );
+            // If the checkbox is checked, create the record if it doesn't exist.
+            // Add the user_id to the values that get created.
+            PmTaskCompletion::firstOrCreate($attributes, ['user_id' => Auth::id()]);
+
+            // Also log this specific activity
+            $task = PmTask::find($validated['pm_task_id']);
+            $lab = Lab::find($validated['lab_id']);
+            log_activity('COMPLETED_PM_TASK', $task, "Completed PM task '{$task->task_description}' for lab '{$lab->lab_name}'");
+
         } else {
-            PmTaskCompletion::where('pm_task_id', $validated['pm_task_id'])
-                ->where('lab_id', $validated['lab_id'])
-                ->whereDate('completed_at', $validated['date'])
-                ->delete();
+            // If the checkbox is unchecked, find the specific record and delete it.
+            PmTaskCompletion::where($attributes)->delete();
+
+            // Also log the un-checking action
+            $task = PmTask::find($validated['pm_task_id']);
+            $lab = Lab::find($validated['lab_id']);
+            log_activity('UNCHECKED_PM_TASK', $task, "Un-checked PM task '{$task->task_description}' for lab '{$lab->lab_name}'");
         }
 
         return response()->json(['success' => true]);
