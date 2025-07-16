@@ -2,47 +2,62 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Http\Request;
 use App\Models\Equipment;
 use App\Models\MaintenanceRecord;
 use App\Models\Announcement;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Models\PmTask;
+use App\Models\PmTaskCompletion;
+use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // --- Stats Overview ---
+        // --- KEY METRIC CARDS ---
         $stats = [
-            'total_equipment' => Equipment::count(),
-            'working_equipment' => Equipment::where('status', 'Working')->count(),
             'for_repair' => Equipment::where('status', 'For Repair')->count(),
-            
-            'pending_maintenance' => MaintenanceRecord::where('status', '!=', 'Completed')->count(),
+            'pending_corrective' => MaintenanceRecord::where('type', 'Corrective')->where('status', '!=', 'Completed')->count(),
         ];
 
-        // --- Recent Activities ---
-        $recentActivities = MaintenanceRecord::where('type', 'Corrective')
-                            ->whereIn('status', ['Pending', 'In Progress'])
-                            ->with('equipment', 'user')
+        // --- PENDING PM TASKS LOGIC ---
+        $today = Carbon::today();
+        $allMasterTasks = PmTask::where('is_active', true)->get();
+
+        // Determine which tasks are theoretically due today
+        $dueTasks = $allMasterTasks->filter(function ($task) use ($today) {
+            switch ($task->frequency) {
+                case 'Daily': return true;
+                case 'Weekly': return $today->isMonday();
+                case 'Monthly': return $today->day == 1;
+                case 'Quarterly': return $today->day == 1 && in_array($today->month, [1, 4, 7, 10]);
+                case 'Annually': return $today->day == 1 && $today->month == 1;
+                default: return false;
+            }
+        });
+
+        // Get completions for ALL labs to calculate the total pending count
+        // Note: This is a simplified count. A more complex query would be needed for a perfect "overdue" count.
+        $completedTodayCount = PmTaskCompletion::whereIn('pm_task_id', $dueTasks->pluck('id'))
+                               ->whereDate('completed_at', $today)
+                               ->distinct('pm_task_id', 'lab_id') // Count each task+lab combo once
+                               ->count();
+
+        // Calculate total possible tasks for the day (due tasks * number of labs)
+        $totalPossibleTasks = $dueTasks->count() * \App\Models\Lab::count();
+        $stats['pending_pm'] = $totalPossibleTasks - $completedTodayCount;
+        
+        // --- OPEN CORRECTIVE MAINTENANCE WIDGET ---
+        $openCorrective = MaintenanceRecord::where('type', 'Corrective')
+                            ->where('status', '!=', 'Completed')
+                            ->with('equipment.lab', 'user')
                             ->latest('date_reported')
                             ->limit(5)
                             ->get();
-        
-        // --- Announcements ---
-        $announcements = \App\Models\Announcement::latest()->limit(3)->get();
 
-        // --- Upcoming Preventive Maintenance ---
-        $upcomingPM = MaintenanceRecord::where('type', 'Preventive')
-                                ->where('status', 'Pending')
-                                ->whereNotNull('scheduled_for')
-                                ->where('scheduled_for', '>=', now()->toDateString())
-                                ->orderBy('scheduled_for', 'asc')
-                                ->with(['equipment.lab', 'user'])
-                                ->limit(5)
-                                ->get();
-        
-        // Pass all the correct data to the view
-        return view('dashboard', compact('stats', 'recentActivities', 'announcements', 'upcomingPM'));
+        // --- ANNOUNCEMENTS WIDGET ---
+        $announcements = Announcement::latest()->limit(3)->get();
+
+        return view('dashboard', compact('stats', 'openCorrective', 'announcements'));
     }
 }

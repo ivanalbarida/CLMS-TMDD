@@ -16,10 +16,25 @@ class EquipmentController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request) 
     {
-        // The index will now list labs with an equipment count for each.
-        $labs = Lab::withCount('equipment')->get();
+        // Start the query for labs
+        $labsQuery = Lab::query();
+
+        // If a status filter is present, we need a more complex query
+        // to count equipment with that status for each lab.
+        if ($request->has('status')) {
+            $status = $request->status;
+            $labsQuery->withCount(['equipment' => function ($query) use ($status) {
+                $query->where('status', $status);
+            }]);
+        } else {
+            // Otherwise, just count all equipment
+            $labsQuery->withCount('equipment');
+        }
+
+        $labs = $labsQuery->get();
+
         return view('equipment.index', compact('labs'));
     }
 

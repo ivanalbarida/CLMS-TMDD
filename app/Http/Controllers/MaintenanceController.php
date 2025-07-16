@@ -15,10 +15,27 @@ class MaintenanceController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request) 
     {
-        // Eager load the equipment and user to prevent N+1 query problem
-        $records = MaintenanceRecord::with('equipment', 'user')->latest('date_reported')->get();
+        // Start the base query
+        $query = MaintenanceRecord::query();
+
+        // Add conditional filters
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        } else {
+            // By default, only show open tasks on this page
+            $query->where('status', '!=', 'Completed');
+        }
+
+        // Eager load relationships and get the results
+        $records = $query->with('equipment', 'user')
+                        ->latest('date_reported')
+                        ->get();
+
         return view('maintenance.index', compact('records'));
     }
 
