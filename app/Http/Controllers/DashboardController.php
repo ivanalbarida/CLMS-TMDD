@@ -16,48 +16,60 @@ class DashboardController extends Controller
     {
         // --- KEY METRIC CARDS ---
         $stats = [
-            'for_repair' => Equipment::where('status', 'For Repair')->count(),
-            'pending_corrective' => MaintenanceRecord::where('type', 'Corrective')->where('status', '!=', 'Completed')->count(),
+            'for_repair' => \App\Models\Equipment::where('status', 'For Repair')->count(),
+            'total_equipment' => Equipment::count(),
+            'pending_corrective' => \App\Models\MaintenanceRecord::where('type', 'Corrective')->where('status', '!=', 'Completed')->count(),
         ];
 
         // --- PENDING PM TASKS LOGIC ---
-        $today = Carbon::today();
-        $allMasterTasks = PmTask::where('is_active', true)->get();
-
-        // Determine which tasks are theoretically due today
-        $dueTasks = $allMasterTasks->filter(function ($task) use ($today) {
-            switch ($task->frequency) {
-                case 'Daily': return true;
-                case 'Weekly': return $today->isMonday();
-                case 'Monthly': return $today->day == 1;
-                case 'Quarterly': return $today->day == 1 && in_array($today->month, [1, 4, 7, 10]);
-                case 'Annually': return $today->day == 1 && $today->month == 1;
-                default: return false;
-            }
-        });
-
-        // Get completions for ALL labs to calculate the total pending count
-        // Note: This is a simplified count. A more complex query would be needed for a perfect "overdue" count.
-        $completedTodayCount = PmTaskCompletion::whereIn('pm_task_id', $dueTasks->pluck('id'))
-                               ->whereDate('completed_at', $today)
-                               ->distinct('pm_task_id', 'lab_id') // Count each task+lab combo once
-                               ->count();
-
-        // Calculate total possible tasks for the day (due tasks * number of labs)
-        $totalPossibleTasks = $dueTasks->count() * \App\Models\Lab::count();
-        $stats['pending_pm'] = $totalPossibleTasks - $completedTodayCount;
+        $today = \Carbon\Carbon::today();
+        $allLabs = \App\Models\Lab::all();
+        $pendingPmCount = 0;
         
-        // --- OPEN CORRECTIVE MAINTENANCE WIDGET ---
+        $allMasterTasks = \App\Models\PmTask::where('is_active', true)->get();
+
+        foreach ($allLabs as $lab) {
+            $completionsThisYear = \App\Models\PmTaskCompletion::where('lab_id', $lab->id)
+                ->whereYear('completed_at', $today->year)
+                ->get();
+            
+            foreach ($allMasterTasks as $task) {
+                $isCompletedInPeriod = false;
+                $startDate = null;
+                $isDue = false;
+
+                switch ($task->frequency) {
+                    case 'Daily': $isDue = true; $startDate = $today->copy(); break;
+                    case 'Weekly': $isDue = true; $startDate = $today->copy()->startOfWeek(); break;
+                    case 'Monthly': $isDue = true; $startDate = $today->copy()->startOfMonth(); break;
+                    case 'Quarterly': $isDue = true; $startDate = $today->copy()->startOfQuarter(); break;
+                }
+
+                if ($isDue) {
+                    $isCompletedInPeriod = $completionsThisYear->contains(function ($c) use ($task, $startDate) {
+                        return $c->pm_task_id == $task->id && \Carbon\Carbon::parse($c->completed_at)->gte($startDate);
+                    });
+                }
+                
+                if ($isDue && !$isCompletedInPeriod) {
+                    $pendingPmCount++;
+                }
+            }
+        }
+        
+        $stats['pending_pm'] = $pendingPmCount;
+        // --- END OF NEW LOGIC ---
+        
         $openCorrective = MaintenanceRecord::where('type', 'Corrective')
+                    ->where('status', '!=', 'Completed')
+                    ->with('equipment.lab', 'user')->latest('date_reported')->limit(10)->get(); 
+
+        $openPreventive = MaintenanceRecord::where('type', 'Preventive')
                             ->where('status', '!=', 'Completed')
-                            ->with('equipment.lab', 'user')
-                            ->latest('date_reported')
-                            ->limit(5)
-                            ->get();
+                            ->with('equipment.lab', 'user')->latest('scheduled_for')->limit(10)->get();
+        
+        $announcements = \App\Models\Announcement::latest()->limit(7)->get();
 
-        // --- ANNOUNCEMENTS WIDGET ---
-        $announcements = Announcement::latest()->limit(3)->get();
-
-        return view('dashboard', compact('stats', 'openCorrective', 'announcements'));
+        return view('dashboard', compact('stats', 'openCorrective', 'openPreventive', 'announcements'));
     }
 }
