@@ -20,6 +20,10 @@
                         {{ __('Labs & Equipment') }}
                     </x-nav-link>
 
+                    <x-nav-link :href="route('service-requests.index')" :active="request()->routeIs('service-requests.*')">
+                        {{ __('Service Requests') }}
+                    </x-nav-link>
+
                     {{-- Add Maintenance Link --}}
                     <div class="hidden sm:flex sm:items-center sm:ms-6">
                         <x-dropdown align="left" width="48">

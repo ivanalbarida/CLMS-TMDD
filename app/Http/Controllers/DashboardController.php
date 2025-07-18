@@ -9,6 +9,7 @@ use App\Models\Announcement;
 use App\Models\PmTask;
 use App\Models\PmTaskCompletion;
 use Carbon\Carbon;
+use App\Models\ServiceRequest;
 
 class DashboardController extends Controller
 {
@@ -19,6 +20,7 @@ class DashboardController extends Controller
             'for_repair' => \App\Models\Equipment::where('status', 'For Repair')->count(),
             'total_equipment' => Equipment::count(),
             'pending_corrective' => \App\Models\MaintenanceRecord::where('type', 'Corrective')->where('status', '!=', 'Completed')->count(),
+            'open_service_requests' => ServiceRequest::whereNotIn('status', ['Completed', 'Rejected'])->count(),
         ];
 
         // --- PENDING PM TASKS LOGIC ---

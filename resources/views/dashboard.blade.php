@@ -28,10 +28,12 @@
                         <p class="text-3xl font-bold text-blue-600">{{ $stats['pending_pm'] }}</p>
                     </div>
                 </a>
-                <div class="bg-white p-6 rounded-lg shadow">
-                    <h4 class="text-gray-500 text-sm font-medium">Open Service Requests</h4>
-                    <p class="text-3xl font-bold text-gray-400">N/A</p>
-                </div>
+                <a href="{{ route('service-requests.index') }}" class="block hover:shadow-lg transition">
+                    <div class="bg-white p-6 rounded-lg shadow h-full">
+                        <h4 class="text-gray-500 text-sm font-medium">Open Service Requests</h4>
+                        <p class="text-3xl font-bold text-purple-600">{{ $stats['open_service_requests'] }}</p>
+                    </div>
+                </a>
             </div>
 
             <!-- Bottom Section: Main Columns -->

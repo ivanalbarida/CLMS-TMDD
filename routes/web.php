@@ -14,6 +14,7 @@ use App\Http\Controllers\SoftwareChecklistController;
 use App\Http\Controllers\PmTaskController;
 use App\Http\Controllers\PreventiveChecklistController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\ServiceRequestController;
 
 // 1. Publicly Accessible Routes
 Route::get('/', function () {
@@ -56,6 +57,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('users', UserController::class);
     Route::get('/users/{user}/activity', [UserController::class, 'activity'])->name('users.activity');
+
+    Route::resource('service-requests', ServiceRequestController::class);
+
+    Route::post('/service-requests/{serviceRequest}/verify', [ServiceRequestController::class, 'verify'])->name('service-requests.verify');
 
     // 3. Admin-Only Routes
     Route::middleware('is.admin')->group(function () {
