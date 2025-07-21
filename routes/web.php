@@ -18,7 +18,7 @@ use App\Http\Controllers\ServiceRequestController;
 
 // 1. Publicly Accessible Routes
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 require __DIR__.'/auth.php';
