@@ -71,7 +71,6 @@
                     if (labId) {
                         url += `?lab_id=${labId}`;
                     } else {
-                        // If no lab is selected, go back to the base URL
                         window.location.href = url;
                     }
                     window.location.href = url;
@@ -82,9 +81,7 @@
                 const isComplete = checkbox.checked;
                 const label = checkbox.closest('label');
 
-                // Give visual feedback that something is happening
                 label.classList.add('opacity-50');
-                // Temporarily disable to prevent double clicks
                 checkbox.disabled = true;
 
                 fetch('{{ route("pm-checklist.toggle") }}', {
@@ -107,7 +104,6 @@
                 })
                 .then(data => {
                     if (data.success) {
-                        // SUCCESS: Re-enable the checkbox so it can be changed again
                         checkbox.disabled = false;
                     } else {
                         throw new Error('API returned success:false');
@@ -116,12 +112,9 @@
                 .catch(error => {
                     console.error('Error:', error);
                     alert('An error occurred. The page will now reload to ensure data consistency.');
-                    // On a critical error, reloading the page is the safest way
-                    // to ensure the UI matches the database state.
                     window.location.reload();
                 })
                 .finally(() => {
-                    // ALWAYS remove the loading state after the request is done
                     label.classList.remove('opacity-50');
                 });
             }

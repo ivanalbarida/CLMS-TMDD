@@ -10,7 +10,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <form method="POST" action="{{ route('software-checklist.update', $softwareChecklist->id) }}" class="p-6">
                     @csrf
-                    @method('PUT') <!-- Tells Laravel this is an UPDATE request -->
+                    @method('PUT')
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Program Name -->

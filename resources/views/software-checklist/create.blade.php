@@ -92,7 +92,6 @@
                 }
             });
 
-            // Start with one row by default
             createSoftwareRow();
         });
     </script>

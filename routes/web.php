@@ -62,23 +62,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/service-requests/{serviceRequest}/verify', [ServiceRequestController::class, 'verify'])->name('service-requests.verify');
 
+    // CSV Import
+    Route::get('/import', [CsvImportController::class, 'show'])->name('import.show');
+    Route::post('/import', [CsvImportController::class, 'store'])->name('import.store');
+
     // 3. Admin-Only Routes
     Route::middleware('is.admin')->group(function () {
         
-        // CSV Import
-        Route::get('/import', [CsvImportController::class, 'show'])->name('import.show');
-        Route::post('/import', [CsvImportController::class, 'store'])->name('import.store');
-
         // Announcements Management
         Route::resource('announcements', AnnouncementController::class);
 
         // User Management
         Route::resource('users', UserController::class);
 
-        // For the more complex academic software feature (if we re-add it)
-        // Route::resource('programs', ProgramController::class);
-        // Route::resource('software', SoftwareController::class);
-        // Route::resource('software-sets', SoftwareSetController::class);
         Route::resource('pm-tasks', PmTaskController::class);
 
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');

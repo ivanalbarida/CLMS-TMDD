@@ -104,7 +104,6 @@
 
                 <!-- Right Column (Narrower) -->
                 <div class="space-y-6">
-                    <!-- The new, self-contained Livewire component goes here -->
                     <livewire:announcements-widget />
                 </div>
 

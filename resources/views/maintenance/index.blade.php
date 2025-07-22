@@ -10,10 +10,8 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <div class="flex justify-between items-center mb-4">
-                        <!-- This is a placeholder for a title if you want one, or can be empty -->
                         <div></div> 
                         
-                        <!-- The buttons now live inside this container -->
                         <div class="flex space-x-4">
                             <a href="{{ route('maintenance.create') }}" class="inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-500 ...">
                                 Report Issue (Corrective)
@@ -39,14 +37,12 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @forelse ($records as $record)
                                 <tr>
-                                    <!-- This is now the FIRST cell, matching the "Type" header -->
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full {{ $record->type == 'Corrective' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800' }}">
                                             {{ $record->type }}
                                         </span>
                                     </td>
                                     
-                                    <!-- The rest of the data cells -->
                                     <td class="px-6 py-4">
                                         @foreach($record->equipment as $pc)
                                             <span class="block">{{ $pc->tag_number }}</span>
@@ -57,7 +53,6 @@
                                     <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($record->date_reported)->format('M d, Y') }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $record->status }}</td>
 
-                                    <!-- This is now the LAST cell, matching the "Actions" header -->
                                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                         <a href="{{ route('maintenance.edit', $record->id) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
                                         
@@ -71,7 +66,6 @@
                                     </td>
                                 </tr>
                                 @empty
-                                    <!-- ... -->
                                 @endforelse
                             </tbody>
                         </table>

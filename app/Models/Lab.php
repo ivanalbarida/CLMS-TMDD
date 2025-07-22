@@ -22,7 +22,7 @@ class Lab extends Model
     /**
      * Get all of the equipment for the Lab.
      */
-    public function equipment() // <-- THIS IS THE MISSING METHOD
+    public function equipment()
     {
         return $this->hasMany(Equipment::class);
     }

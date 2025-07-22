@@ -10,7 +10,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <form method="POST" action="{{ route('announcements.update', $announcement->id) }}" class="p-6">
                     @csrf
-                    @method('PUT') <!-- Important: Tells Laravel this is an UPDATE request -->
+                    @method('PUT')
 
                     <div class="space-y-6">
                         <!-- Title -->
