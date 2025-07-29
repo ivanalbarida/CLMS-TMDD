@@ -47,6 +47,21 @@
                                 </select>
                             </div>
 
+                            <div class="md:col-span-2 mt-6">
+                                <label class="block font-medium text-sm text-gray-700">Assign Labs</label>
+                                <div class="mt-2 border rounded-md p-4 space-y-2 max-h-48 overflow-y-auto">
+                                    @foreach ($labs as $lab)
+                                        <label class="flex items-center">
+                                            <input type="checkbox" name="labs[]" value="{{ $lab->id }}"
+                                                class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                                @if(in_array($lab->id, $assignedLabIds)) checked @endif
+                                            >
+                                            <span class="ml-2 text-sm text-gray-600">{{ $lab->lab_name }} ({{ $lab->building_name }})</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+
                             <!-- Password -->
                             <div class="mt-4 md:col-span-2">
                                 <p class="text-sm text-gray-600">Update Password (optional)</p>

@@ -72,7 +72,7 @@ class ServiceRequestController extends Controller
     public function show(ServiceRequest $serviceRequest)
     {
         // Get all users who are Technicians or Admins to populate the "Assign To" dropdown
-        $technicians = User::whereIn('role', ['Admin', 'Technician'])->orderBy('name')->get();
+        $technicians = User::whereIn('role', ['Admin', 'Custodian/Technician'])->orderBy('name')->get();
 
         // Get the full history for this specific service request
         $history = ActivityLog::where('subject_type', get_class($serviceRequest))

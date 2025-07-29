@@ -27,4 +27,9 @@ class Lab extends Model
         return $this->hasMany(Equipment::class);
     }
 
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
+
 }

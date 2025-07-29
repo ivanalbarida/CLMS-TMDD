@@ -42,7 +42,7 @@ class MaintenanceController extends Controller
     public function create()
     {
         $labs = \App\Models\Lab::with('equipment')->get();
-        $technicians = \App\Models\User::whereIn('role', ['Admin', 'Technician'])->orderBy('name')->get();
+        $technicians = User::whereIn('role', ['Admin', 'Custodian/Technician'])->orderBy('name')->get();
         $statuses = ['Pending', 'In Progress', 'Completed'];
 
         return view('maintenance.create', compact('labs', 'technicians', 'statuses'));
@@ -161,7 +161,7 @@ class MaintenanceController extends Controller
     public function schedule()
     {
         $labs = \App\Models\Lab::with('equipment')->get();
-        $technicians = \App\Models\User::whereIn('role', ['Admin', 'Technician'])->orderBy('name')->get();
+        $technicians = User::whereIn('role', ['Admin', 'Custodian/Technician'])->orderBy('name')->get();
         
         return view('maintenance.schedule', compact('labs', 'technicians'));
     }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Lab;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
@@ -25,7 +26,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        $roles = ['Admin', 'Technician', 'Custodian'];
+        $roles = ['Admin', 'Custodian/Technician'];
         return view('users.create', compact('roles'));
     }
 
@@ -38,7 +39,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'username' => ['required', 'string', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'string', 'in:Admin,Technician,Custodian'],
+            'role' => ['required', 'string', 'in:Admin,Custodian/Technician'],
         ]);
 
         $user = User::create([
@@ -62,8 +63,13 @@ class UserController extends Controller
      */
     public function edit(User $user)
     {
-        $roles = ['Admin', 'Technician', 'Custodian'];
-        return view('users.edit', compact('user', 'roles'));
+        $roles = ['Admin', 'Custodian/Technician'];
+
+        $labs = Lab::orderBy('lab_name')->get(); 
+    
+        $assignedLabIds = $user->labs()->pluck('labs.id')->toArray();
+
+        return view('users.edit', compact('user', 'roles', 'labs', 'assignedLabIds'));
     }
 
     /**
@@ -73,21 +79,28 @@ class UserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:'.User::class. ',username,' . $user->id],
-            'role' => ['required', 'string', 'in:Admin,Technician,Custodian'],
+            'username' => ['required', 'string', 'max:255', 'unique:users,username,' . $user->id],
+            'role' => ['required', 'string', 'in:Admin,Custodian/Technician'],
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
+            'labs' => 'nullable|array', 
+            'labs.*' => 'exists:labs,id', 
         ]);
 
         $user->name = $request->name;
         $user->username = $request->username;
         $user->role = $request->role;
 
-        // Only update the password if a new one was entered
         if ($request->filled('password')) {
             $user->password = Hash::make($request->password);
         }
         
         $user->save();
+
+        if ($user->role === 'Custodian/Technician') {
+            $user->labs()->sync($request->input('labs', []));
+        } else {
+            $user->labs()->detach();
+        }
 
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }

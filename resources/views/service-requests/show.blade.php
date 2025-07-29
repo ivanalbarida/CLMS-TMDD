@@ -93,7 +93,7 @@
                 @endif
                     
                     <!-- Technician Actions Panel -->
-                    @if(in_array(Auth::user()->role, ['Admin', 'Technician']))
+                    @if(in_array(Auth::user()->role, ['Admin', 'Custodian/Technician']))
                         <div class="bg-white p-6 shadow-sm sm:rounded-lg">
                             <h3 class="text-lg font-semibold mb-4">Technician Actions</h3>
                             
