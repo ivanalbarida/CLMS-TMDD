@@ -10,30 +10,26 @@ use App\Models\Lab;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use App\Models\ActivityLog;
+use Illuminate\Support\Facades\Auth;
 
 class EquipmentController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request) 
+    public function index()
     {
-        // Start the query for labs
         $labsQuery = Lab::query();
 
-        // If a status filter is present, we need a more complex query
-        // to count equipment with that status for each lab.
-        if ($request->has('status')) {
-            $status = $request->status;
-            $labsQuery->withCount(['equipment' => function ($query) use ($status) {
-                $query->where('status', $status);
-            }]);
-        } else {
-            // Otherwise, just count all equipment
-            $labsQuery->withCount('equipment');
-        }
+        $user = Auth::user();
+        if ($user->role === 'Custodian/Technician') {
 
-        $labs = $labsQuery->get();
+            $labsQuery->whereHas('users', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            });
+        }
+        
+        $labs = $labsQuery->withCount('equipment')->get();
 
         return view('equipment.index', compact('labs'));
     }
