@@ -20,6 +20,10 @@
                         {{ __('Labs & Equipment') }}
                     </x-nav-link>
 
+                    <x-nav-link :href="route('software-list.index')" :active="request()->routeIs('software-list.*')">
+                        {{ __('Software List') }}
+                    </x-nav-link>
+
                     <x-nav-link :href="route('service-requests.index')" :active="request()->routeIs('service-requests.*')">
                         {{ __('Service Requests') }}
                     </x-nav-link>
@@ -49,10 +53,6 @@
                         </x-dropdown>
                     </div>
 
-                    <x-nav-link :href="route('software-checklist.index')" :active="request()->routeIs('software-checklist.*')">
-                        {{ __('Software Checklist') }}
-                    </x-nav-link>
-
                     {{-- Admin-only Configuration Dropdown Menu --}}
                     @if(Auth::user()->role == 'Admin')
 
@@ -80,6 +80,9 @@
                                     </x-dropdown-link>
                                     <x-dropdown-link :href="route('pm-tasks.index')">
                                         {{ __('Manage PM Tasks') }}
+                                    </x-dropdown-link>
+                                    <x-dropdown-link :href="route('software-items.index')">
+                                        {{ __('Manage Software') }}
                                     </x-dropdown-link>
                                     {{-- Add future admin links here --}}
                                 </x-slot>

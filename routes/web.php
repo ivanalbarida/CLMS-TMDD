@@ -10,11 +10,13 @@ use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\CsvImportController;
 use App\Http\Controllers\AnnouncementController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\SoftwareChecklistController;
+// use App\Http\Controllers\SoftwareChecklistController;
 use App\Http\Controllers\PmTaskController;
 use App\Http\Controllers\PreventiveChecklistController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ServiceRequestController;
+use App\Http\Controllers\SoftwareItemController;
+use App\Http\Controllers\SoftwareListController;
 
 // 1. Publicly Accessible Routes
 Route::get('/', function () {
@@ -64,6 +66,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/import', [CsvImportController::class, 'show'])->name('import.show');
     Route::post('/import', [CsvImportController::class, 'store'])->name('import.store');
 
+    Route::get('/software-list', [SoftwareListController::class, 'index'])->name('software-list.index');
+
     // 3. Admin-Only Routes
     Route::middleware('is.admin')->group(function () {
         
@@ -74,6 +78,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('users', UserController::class);
 
         Route::resource('pm-tasks', PmTaskController::class);
+
+        Route::resource('software-items', SoftwareItemController::class);
 
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');

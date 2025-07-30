@@ -32,4 +32,8 @@ class Lab extends Model
         return $this->belongsToMany(User::class);
     }
 
+    public function softwareProfile()
+    {
+        return $this->belongsTo(SoftwareProfile::class);
+    }
 }
