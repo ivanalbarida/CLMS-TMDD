@@ -8,8 +8,14 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
 
-            <div class="mb-6">
-                <a href="{{ route('equipment.index') }}" class="text-indigo-600 hover:text-indigo-900">← Back to All Labs</a>
+            <div class="flex justify-between items-center mb-6">
+                <a href="{{ route('equipment.index') }}" class="text-sm text-indigo-600 hover:text-indigo-900 font-semibold">
+                    ← Back to All Labs
+                </a>
+                
+                <a href="{{ route('reports.lab.form', $lab) }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
+                    Generate Lab Report
+                </a>
             </div>
             
             <div class="mb-8">
@@ -82,9 +88,14 @@
                                     {{ $item->components->firstWhere('type', 'OS')->description ?? 'N/A' }}
                                 </td>
 
-                                <!-- Placeholder for Installed Software -->
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    *Software list goes here*
+                                    @if ($lab->softwareProfile)
+                                        <a href="{{ route('software-list.index') }}" class="text-indigo-600 hover:text-indigo-900 hover:underline">
+                                            {{ $lab->softwareProfile->name }} ({{ $lab->softwareProfile->softwareItems->count() }} items)
+                                        </a>
+                                    @else
+                                        <span class="text-xs italic">No profile assigned</span>
+                                    @endif
                                 </td>
 
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

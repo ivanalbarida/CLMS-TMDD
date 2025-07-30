@@ -7,6 +7,8 @@ use App\Models\MaintenanceRecord;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\MaintenanceReportExport;
+use App\Models\Lab;
+use App\Models\ActivityLog;
 
 class ReportController extends Controller
 {
@@ -117,5 +119,36 @@ class ReportController extends Controller
         };
 
         return response()->stream($callback, 200, $headers);
+    }
+
+    public function showLabReportForm(Lab $lab)
+        {
+            return view('reports.lab-report-form', compact('lab'));
+        }
+
+        public function generateLabReport(Request $request, Lab $lab)
+    {
+        // Validate the incoming dates
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $startDate = Carbon::parse($request->start_date)->startOfDay();
+        $endDate = Carbon::parse($request->end_date)->endOfDay();
+
+        // Load all the relationships we need for the report
+        $lab->load(['softwareProfile.softwareItems', 'equipment.components']);
+
+        // Fetch the maintenance history for the selected date range
+        $equipmentIdsInLab = $lab->equipment->pluck('id');
+        $history = ActivityLog::where('subject_type', 'App\Models\Equipment')
+                            ->whereIn('subject_id', $equipmentIdsInLab)
+                            ->whereBetween('created_at', [$startDate, $endDate]) // Use the dynamic dates
+                            ->with('user', 'subject')
+                            ->latest()
+                            ->get();
+        
+        return view('reports.lab-report', compact('lab', 'history', 'startDate', 'endDate'));
     }
 }

@@ -70,31 +70,20 @@ class LabController extends Controller
      * Update the specified lab in storage.
      */
     public function update(Request $request, Lab $lab)
-    {
-        // Validate the incoming data with unique constraint (ignoring the current lab's ID) and custom message
-        $request->validate([
-            'lab_name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('labs', 'lab_name')->ignore($lab->id), // Unique rule ignoring current ID
-            ],
-            'building_name' => 'required|string|max:255',
-            'software_profile_id' => 'nullable|exists:software_profiles,id',
-        ], [
-            // Custom validation message for uniqueness
-            'lab_name.unique' => 'The Lab Name / Room # already exists. Please choose a different one.',
-        ]);
+{
+    $request->validate([
+        'lab_name' => 'required|string|max:255',
+        'building_name' => 'required|string|max:255',
+        'software_profile_id' => 'nullable|exists:software_profiles,id',
+    ]);
 
-        $lab->update([
-            'lab_name' => $request->lab_name,
-            'building_name' => $request->building_name,
-        ]);
+    // This single line will now update all fillable fields correctly.
+    $lab->update($request->all());
 
-        log_activity('UPDATED', $lab, "Updated details for lab '{$lab->lab_name}'.");
+    log_activity('UPDATED', $lab, "Updated details for lab '{$lab->lab_name}'.");
 
-        return redirect()->route('equipment.index')->with('success', 'Lab updated successfully.');
-    }
+    return redirect()->route('equipment.index')->with('success', 'Lab updated successfully.');
+}
 
     /**
      * Remove the specified lab from storage.

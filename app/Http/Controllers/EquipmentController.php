@@ -218,7 +218,7 @@ class EquipmentController extends Controller
     {
         // Eager load the equipment, and for each piece of equipment,
         // also load its 'components' relationship.
-        $lab->load(['equipment.components']);
+        $lab->load(['equipment.components', 'softwareProfile.softwareItems']);
         
         // The lab activity history part is already correct
         $equipmentIdsInLab = $lab->equipment->pluck('id');

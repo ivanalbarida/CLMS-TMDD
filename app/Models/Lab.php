@@ -17,6 +17,7 @@ class Lab extends Model
     protected $fillable = [
         'lab_name',
         'building_name',
+        'software_profile_id',
     ];
 
     /**
