@@ -216,18 +216,17 @@ class EquipmentController extends Controller
 
     public function showByLab(Lab $lab)
     {
-        // Eager load the equipment for the main list
-        $lab->load('equipment.components');
-
-        // Get all the IDs of the equipment that belong to this lab
+        // Eager load the equipment, and for each piece of equipment,
+        // also load its 'components' relationship.
+        $lab->load(['equipment.components']);
+        
+        // The lab activity history part is already correct
         $equipmentIdsInLab = $lab->equipment->pluck('id');
-
-        // Now, find all activity logs where the subject is one of those equipment IDs
         $labHistory = ActivityLog::where('subject_type', 'App\Models\Equipment')
                                 ->whereIn('subject_id', $equipmentIdsInLab)
-                                ->with('user', 'subject') // Eager load the user and the specific equipment
-                                ->latest() // Show newest first
-                                ->paginate(10, ['*'], 'history_page'); // Paginate with a custom page name
+                                ->with('user', 'subject')
+                                ->latest()
+                                ->paginate(10, ['*'], 'history_page');
 
         return view('equipment.list-by-lab', compact('lab', 'labHistory'));
     }
