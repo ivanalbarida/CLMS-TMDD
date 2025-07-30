@@ -84,6 +84,9 @@
                                     <x-dropdown-link :href="route('software-items.index')">
                                         {{ __('Manage Software') }}
                                     </x-dropdown-link>
+                                    <x-dropdown-link :href="route('software-profiles.index')">
+                                        {{ __('Manage Software Profiles') }}
+                                    </x-dropdown-link>
                                     {{-- Add future admin links here --}}
                                 </x-slot>
                             </x-dropdown>

@@ -17,6 +17,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ServiceRequestController;
 use App\Http\Controllers\SoftwareItemController;
 use App\Http\Controllers\SoftwareListController;
+use App\Http\Controllers\SoftwareProfileController;
 
 // 1. Publicly Accessible Routes
 Route::get('/', function () {
@@ -80,6 +81,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('pm-tasks', PmTaskController::class);
 
         Route::resource('software-items', SoftwareItemController::class);
+
+        Route::resource('software-profiles', SoftwareProfileController::class);
 
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');

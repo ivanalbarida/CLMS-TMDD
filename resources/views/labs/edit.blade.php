@@ -33,6 +33,19 @@
                             @enderror
                         </div>
 
+                        <div class="mt-4">
+                            <label for="software_profile_id" class="block font-medium text-sm text-gray-700">Assign Software Profile</label>
+                            <select id="software_profile_id" name="software_profile_id" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                                <option value="">-- None (No specific software required) --</option>
+                                @foreach ($softwareProfiles as $profile)
+                                    <option value="{{ $profile->id }}" @selected(old('software_profile_id', $lab->software_profile_id) == $profile->id)>
+                                        {{ $profile->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-xs text-gray-500">Select the software profile that should be installed in this lab.</p>
+                        </div>
+
                         <div class="flex items-center justify-end mt-4">
                             <button type="submit" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:bg-gray-700 active:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
                                 Update Lab

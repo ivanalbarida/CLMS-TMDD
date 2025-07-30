@@ -4,7 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Lab;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule; // This line is crucial for the update method
+use Illuminate\Validation\Rule;
+use App\Models\SoftwareProfile;
 
 class LabController extends Controller
 {
@@ -60,7 +61,9 @@ class LabController extends Controller
      */
     public function edit(Lab $lab)
     {
-        return view('labs.edit', compact('lab'));
+        $softwareProfiles = SoftwareProfile::orderBy('name')->get();
+        
+        return view('labs.edit', compact('lab', 'softwareProfiles')); // Pass the new variable to the view
     }
 
     /**
@@ -77,6 +80,7 @@ class LabController extends Controller
                 Rule::unique('labs', 'lab_name')->ignore($lab->id), // Unique rule ignoring current ID
             ],
             'building_name' => 'required|string|max:255',
+            'software_profile_id' => 'nullable|exists:software_profiles,id',
         ], [
             // Custom validation message for uniqueness
             'lab_name.unique' => 'The Lab Name / Room # already exists. Please choose a different one.',
@@ -86,6 +90,8 @@ class LabController extends Controller
             'lab_name' => $request->lab_name,
             'building_name' => $request->building_name,
         ]);
+
+        log_activity('UPDATED', $lab, "Updated details for lab '{$lab->lab_name}'.");
 
         return redirect()->route('equipment.index')->with('success', 'Lab updated successfully.');
     }
