@@ -45,6 +45,12 @@ class ReportController extends Controller
             $query->where('status', 'like', '%' . $request->status . '%');
         }
 
+        $user = Auth::user();
+        if ($user->role !== 'Admin') {
+            // If the user is NOT an Admin, only show records they are assigned to.
+            $query->where('user_id', $user->id);
+        }
+
         // 3. Eager load all necessary relationships and execute the query
         $records = $query->with(['user', 'equipment.lab'])
                          ->orderBy('date_reported', 'desc')
@@ -127,7 +133,7 @@ class ReportController extends Controller
         }
 
         public function generateLabReport(Request $request, Lab $lab)
-    {
+        {
         // Validate the incoming dates
         $request->validate([
             'start_date' => 'required|date',
@@ -138,17 +144,18 @@ class ReportController extends Controller
         $endDate = Carbon::parse($request->end_date)->endOfDay();
 
         // Load all the relationships we need for the report
-        $lab->load(['softwareProfile.softwareItems', 'equipment.components']);
+        $lab->load(['softwareProfile.softwareItems', 'equipment.components', 'equipment.openSoftwareIssues']);
 
         // Fetch the maintenance history for the selected date range
         $equipmentIdsInLab = $lab->equipment->pluck('id');
-        $history = ActivityLog::where('subject_type', 'App\Models\Equipment')
-                            ->whereIn('subject_id', $equipmentIdsInLab)
-                            ->whereBetween('created_at', [$startDate, $endDate]) // Use the dynamic dates
-                            ->with('user', 'subject')
-                            ->latest()
-                            ->get();
-        
+        $history = \App\Models\MaintenanceRecord::whereHas('equipment', function ($query) use ($equipmentIdsInLab) {
+            $query->whereIn('equipment.id', $equipmentIdsInLab);
+        })
+        ->whereBetween('date_reported', [$startDate, $endDate])
+        ->with('user', 'equipment')
+        ->latest('date_reported')
+        ->get();
+    
         return view('reports.lab-report', compact('lab', 'history', 'startDate', 'endDate'));
     }
 }

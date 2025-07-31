@@ -41,7 +41,14 @@ class MaintenanceController extends Controller
 
     public function create()
     {
-        $labs = \App\Models\Lab::with('equipment')->get();
+        $labsQuery = \App\Models\Lab::query();
+
+        if (Auth::user()->role !== 'Admin') {
+            // If not an admin, only get labs assigned to this user
+            $labsQuery->whereHas('users', fn($q) => $q->where('user_id', Auth::id()));
+        }
+
+        $labs = $labsQuery->with('equipment')->get();
         $technicians = User::whereIn('role', ['Admin', 'Custodian/Technician'])->orderBy('name')->get();
         $statuses = ['Pending', 'In Progress', 'Completed'];
         $categories = ['Hardware Issue', 'Software Issue', 'Network Issue', 'Facilities Issue', 'Other'];
@@ -66,6 +73,10 @@ class MaintenanceController extends Controller
             'action_taken' => 'required_if:status,Completed|nullable|string',
             'date_completed' => 'required_if:status,Completed|nullable|date',
         ]);
+
+        if (Auth::user()->role !== 'Admin') {
+            $dataToCreate['user_id'] = Auth::id();
+        }
 
         DB::transaction(function () use ($request) {
             $dataToCreate = $request->except(['_token', 'equipment_ids']);
@@ -164,7 +175,14 @@ class MaintenanceController extends Controller
 
     public function schedule()
     {
-        $labs = \App\Models\Lab::with('equipment')->get();
+        $labsQuery = \App\Models\Lab::query();
+
+        if (Auth::user()->role !== 'Admin') {
+            // If not an admin, only get labs assigned to this user
+            $labsQuery->whereHas('users', fn($q) => $q->where('user_id', Auth::id()));
+        }
+
+        $labs = $labsQuery->with('equipment')->get();
         $technicians = User::whereIn('role', ['Admin', 'Custodian/Technician'])->orderBy('name')->get();
         
         return view('maintenance.schedule', compact('labs', 'technicians'));

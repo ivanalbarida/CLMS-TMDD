@@ -27,6 +27,7 @@
                                 <tr>
                                     <th class="px-6 py-3 ...">Type</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tag No.</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Laboratory</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Issue</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Technician</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date Reported</th>
@@ -48,6 +49,7 @@
                                             <span class="block">{{ $pc->tag_number }}</span>
                                         @endforeach
                                     </td>
+                                    <td class="px-6 py-4 whitespace-normal max-w-xs truncate">{{ $record->equipment->first()->lab->lab_name ?? 'N/A' }}</td>
                                     <td class="px-6 py-4 whitespace-normal max-w-xs truncate">{{ $record->issue_description }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ $record->user->name ?? 'N/A' }}</td>
                                     <td class="px-6 py-4 whitespace-nowrap">{{ \Carbon\Carbon::parse($record->date_reported)->format('M d, Y') }}</td>

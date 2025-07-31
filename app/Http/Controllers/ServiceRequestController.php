@@ -31,7 +31,13 @@ class ServiceRequestController extends Controller
      */
     public function create()
     {
-        return view('service-requests.create');
+        $labsQuery = \App\Models\Lab::query();
+        if (Auth::user()->role !== 'Admin') {
+            $labsQuery->whereHas('users', fn($q) => $q->where('user_id', Auth::id()));
+        }
+        $labs = $labsQuery->get();
+        
+        return view('service-requests.create', compact('labs'));
     }
 
     /**

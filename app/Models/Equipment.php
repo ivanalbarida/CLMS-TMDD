@@ -36,4 +36,11 @@ class Equipment extends Model
     {
         return $this->belongsToMany(MaintenanceRecord::class, 'equipment_maintenance');
     }
+
+    public function openSoftwareIssues()
+    {
+        return $this->maintenanceRecords()
+                    ->where('category', 'Software Issue')
+                    ->where('status', '!=', 'Completed');
+    }
 }

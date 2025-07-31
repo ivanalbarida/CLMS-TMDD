@@ -218,7 +218,7 @@ class EquipmentController extends Controller
     {
         // Eager load the equipment, and for each piece of equipment,
         // also load its 'components' relationship.
-        $lab->load(['equipment.components', 'softwareProfile.softwareItems']);
+        $lab->load(['equipment.components', 'equipment.openSoftwareIssues', 'softwareProfile.softwareItems']);
 
         $lab->load(['equipment' => function ($query) {
             $query->with(['components', 'maintenanceRecords' => function ($subQuery) {

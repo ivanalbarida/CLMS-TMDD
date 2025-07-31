@@ -58,6 +58,16 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <h3 class="text-lg font-semibold mb-4">Equipment in this Lab</h3>
+                    <div class="mb-6 p-4 bg-gray-50 border rounded-lg">
+                        <p class="text-sm font-medium text-gray-700">
+                            Required Software Profile: 
+                            @if ($lab->softwareProfile)
+                                <strong class="text-gray-900">{{ $lab->softwareProfile->name }}</strong>
+                            @else
+                                <span class="italic text-gray-500">None Assigned</span>
+                            @endif
+                        </p>
+                    </div>
                     <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
@@ -89,16 +99,20 @@
                                 </td>
 
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    @if ($item->maintenanceRecords->isNotEmpty())
-                                        <!-- If the PC has open software issues, show a warning -->
-                                        <span class="text-yellow-600 font-semibold">⚠️ Software Issue Reported</span>
-                                    @elseif ($lab->softwareProfile)
-                                        <!-- If no issues and a profile exists, it's compliant -->
-                                        <span class="text-green-600">✅ {{ $lab->softwareProfile->name }}</span>
-                                    @else
-                                        <span class="text-xs italic">No profile assigned</span>
-                                    @endif
-                                </td>
+                                @if ($item->openSoftwareIssues->isNotEmpty())
+                                    <!-- If the PC has any open software issues, show a warning -->
+                                    <span class="text-yellow-600 font-semibold flex items-center">
+                                        Software Issue Reported
+                                    </span>
+                                @elseif ($lab->softwareProfile)
+                                    <!-- If no open issues and a profile exists, it's compliant -->
+                                    <span class="text-green-600 flex items-center">
+                                        Profile Compliant
+                                    </span>
+                                @else
+                                    <span class="text-xs italic text-gray-500">No profile assigned</span>
+                                @endif
+                            </td>
 
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <a href="{{ route('equipment.show', $item->id) }}" class="text-blue-600 hover:text-blue-900">View</a>

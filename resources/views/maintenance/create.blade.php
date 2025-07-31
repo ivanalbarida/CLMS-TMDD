@@ -72,12 +72,20 @@
                                 <!-- Assigned Technician -->
                                 <div>
                                     <label for="user_id" class="block font-medium text-sm text-gray-700">Assigned Technician</label>
-                                    <select id="user_id" name="user_id" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
-                                        <option value="">-- Select Technician --</option>
-                                        @foreach($technicians as $tech)
-                                        <option value="{{ $tech->id }}">{{ $tech->name }}</option>
-                                        @endforeach
-                                    </select>
+                                    
+                                    @if(Auth::user()->role === 'Admin')
+                                        <!-- ADMINS see a full dropdown to assign to anyone -->
+                                        <select id="user_id" name="user_id" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                                            <option value="">-- Select Technician --</option>
+                                            @foreach($technicians as $tech)
+                                                <option value="{{ $tech->id }}">{{ $tech->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    @else
+                                        <!-- NON-ADMINS see their own name (read-only) and a hidden input -->
+                                        <input type="hidden" name="user_id" value="{{ Auth::id() }}">
+                                        <input type="text" value="{{ Auth::user()->name }}" disabled class="block mt-1 w-full border-gray-300 rounded-md shadow-sm bg-gray-100">
+                                    @endif
                                 </div>
 
                                 <!-- Status -->

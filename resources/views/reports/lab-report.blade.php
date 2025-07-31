@@ -64,6 +64,7 @@
                         <th class="px-2 py-2 text-left font-semibold">Processor</th>
                         <th class="px-2 py-2 text-left font-semibold">Monitor</th>
                         <th class="px-2 py-2 text-left font-semibold">OS</th>
+                        <th class="py-2 text-left font-semibold">Software Status</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -74,6 +75,15 @@
                         <td class="px-2 py-2">{{ $item->components->firstWhere('type', 'Processor')->description ?? 'N/A' }}</td>
                         <td class="px-2 py-2">{{ $item->components->firstWhere('type', 'Monitor')->description ?? 'N/A' }}</td>
                         <td class="px-2 py-2">{{ $item->components->firstWhere('type', 'OS')->description ?? 'N/A' }}</td>
+                        <td>
+                            @if ($item->openSoftwareIssues->isNotEmpty())
+                                <span style="color: #D97706;">Software Issue Reported</span>
+                            @elseif ($lab->softwareProfile)
+                                <span style="color: #059669;">Profile Compliant</span>
+                            @else
+                                <span style-="font-style: italic; color: #6B7280;">No profile assigned</span>
+                            @endif
+                        </td>
                     </tr>
                     @endforeach
                 </tbody>
@@ -89,19 +99,39 @@
                         <th class="px-2 py-2 text-left font-semibold">Date</th>
                         <th class="px-2 py-2 text-left font-semibold">Equipment</th>
                         <th class="px-2 py-2 text-left font-semibold">User</th>
+                        <th class="py-2 py-2 text-left font-semibold">Category</th>
                         <th class="px-2 py-2 text-left font-semibold" style="width: 40%;">Description</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    @forelse ($history as $log)
+                    @forelse ($history as $record) <!-- Changed $log to $record for clarity -->
                     <tr class="hover:bg-gray-50">
-                        <td class="px-2 py-2 whitespace-nowrap">{{ $log->created_at->format('Y-m-d') }}</td>
-                        <td class="px-2 py-2 font-semibold">{{ $log->subject->tag_number ?? 'N/A' }}</td>
-                        <td class="px-2 py-2">{{ $log->user->name ?? 'System' }}</td>
-                        <td class="px-2 py-2">{{ $log->description }}</td>
+                        <!-- Use date_reported directly from the record -->
+                        <td class="px-2 py-2 whitespace-nowrap">{{ $record->date_reported->format('Y-m-d') }}</td>
+                        
+                        <!-- Loop through the equipment associated with this record -->
+                        <td class="px-2 py-2 font-semibold">
+                            @foreach($record->equipment as $pc)
+                                <span class="block">{{ $pc->tag_number }}</span>
+                            @endforeach
+                        </td>
+                        
+                        <!-- Get the user directly from the record -->
+                        <td class="px-2 py-2">{{ $record->user->name ?? 'System' }}</td>
+                        
+                        <!-- Get the category directly from the record -->
+                        <td class="px-2 py-2">{{ $record->category }}</td>
+
+                        <!-- Use a combination of issue and action taken for the description -->
+                        <td class="px-2 py-2">
+                            <span class="block"><strong>Issue:</strong> {{ $record->issue_description }}</span>
+                            @if($record->action_taken)
+                                <span class="block mt-1"><strong>Action:</strong> {{ $record->action_taken }}</span>
+                            @endif
+                        </td>
                     </tr>
                     @empty
-                    <tr><td colspan="4" class="py-4 text-center text-gray-500">No maintenance history in the selected period.</td></tr>
+                    <tr><td colspan="5" class="py-4 text-center text-gray-500">No maintenance history in the selected period.</td></tr>
                     @endforelse
                 </tbody>
             </table>

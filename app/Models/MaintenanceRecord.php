@@ -22,6 +22,13 @@ class MaintenanceRecord extends Model
         'category',
     ];
 
+    protected $casts = [
+        'date_reported' => 'date',
+        'date_started' => 'date',
+        'date_completed' => 'date',
+        'scheduled_for' => 'date',
+    ];
+
     /**
      * Get the equipment that this maintenance record belongs to.
      */
