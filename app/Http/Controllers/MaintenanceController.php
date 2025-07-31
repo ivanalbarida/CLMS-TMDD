@@ -44,8 +44,9 @@ class MaintenanceController extends Controller
         $labs = \App\Models\Lab::with('equipment')->get();
         $technicians = User::whereIn('role', ['Admin', 'Custodian/Technician'])->orderBy('name')->get();
         $statuses = ['Pending', 'In Progress', 'Completed'];
+        $categories = ['Hardware Issue', 'Software Issue', 'Network Issue', 'Facilities Issue', 'Other'];
 
-        return view('maintenance.create', compact('labs', 'technicians', 'statuses'));
+        return view('maintenance.create', compact('labs', 'technicians', 'statuses', 'categories'));
     }
 
     public function store(Request $request)
@@ -59,6 +60,7 @@ class MaintenanceController extends Controller
             'issue_description' => 'required|string',
             'status' => 'required|string',
             'scheduled_for' => 'nullable|date',
+            'category' => 'required|string',
             
             // Add conditional validation
             'action_taken' => 'required_if:status,Completed|nullable|string',
@@ -105,8 +107,9 @@ class MaintenanceController extends Controller
         
         $technicians = \App\Models\User::whereIn('role', ['Admin', 'Technician'])->orderBy('name')->get();
         $statuses = ['Pending', 'In Progress', 'Completed'];
+        $categories = ['Hardware Issue', 'Software Issue', 'Network Issue', 'Facilities Issue', 'Other'];
 
-        return view('maintenance.edit', compact('maintenance', 'assignedEquipmentIds', 'labs', 'technicians', 'statuses'));
+        return view('maintenance.edit', compact('maintenance', 'assignedEquipmentIds', 'labs', 'technicians', 'statuses', 'categories'));
     }
 
     /**
@@ -122,7 +125,8 @@ class MaintenanceController extends Controller
             'status' => 'required|string',
             'issue_description' => 'required|string',
             'action_taken' => 'nullable|string',
-            'date_started' => 'nullable|date', // <-- ADD VALIDATION
+            'date_started' => 'nullable|date',
+            'category' => 'required|string',
         ]);
 
         // --- Activity Logging Logic ---

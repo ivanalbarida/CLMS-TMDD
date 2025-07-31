@@ -19,6 +19,7 @@ class MaintenanceRecord extends Model
         'date_started', 
         'status',
         'date_completed',
+        'category',
     ];
 
     /**

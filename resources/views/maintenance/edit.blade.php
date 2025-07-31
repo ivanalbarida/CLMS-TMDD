@@ -52,6 +52,17 @@
                         <div class="border-t pt-6 space-y-6">
                             <h3 class="block font-medium text-lg text-gray-800">3. Provide Log Details</h3>
 
+                            <div>
+                                <label for="category" class="block font-medium text-sm text-gray-700">Category*</label>
+                                <select id="category" name="category" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" {{ $isCompleted ? 'disabled' : '' }}>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category }}" @selected(old('category', $maintenance->category) == $category)>
+                                            {{ $category }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
                             @if($maintenance->type == 'Preventive')
                             <div>
                                 <label for="scheduled_for" class="block font-medium text-sm text-gray-700">Scheduled For Date</label>

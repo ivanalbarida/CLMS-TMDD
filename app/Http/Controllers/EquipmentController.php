@@ -219,6 +219,13 @@ class EquipmentController extends Controller
         // Eager load the equipment, and for each piece of equipment,
         // also load its 'components' relationship.
         $lab->load(['equipment.components', 'softwareProfile.softwareItems']);
+
+        $lab->load(['equipment' => function ($query) {
+            $query->with(['components', 'maintenanceRecords' => function ($subQuery) {
+                // Get only OPEN maintenance records categorized as software issues
+                $subQuery->where('status', '!=', 'Completed')->where('category', 'Software Issue');
+            }]);
+        }, 'softwareProfile.softwareItems']);
         
         // The lab activity history part is already correct
         $equipmentIdsInLab = $lab->equipment->pluck('id');

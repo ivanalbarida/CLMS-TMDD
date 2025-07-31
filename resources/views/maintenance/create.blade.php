@@ -58,6 +58,17 @@
                             <h3 class="block font-medium text-sm text-gray-700">3. Provide Log Details</h3>
                             
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                                <div>
+                                    <label for="category" class="block font-medium text-sm text-gray-700">Category*</label>
+                                    <select id="category" name="category" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                                        <option value="">-- Select a Category --</option>
+                                        @foreach($categories as $category)
+                                            <option value="{{ $category }}">{{ $category }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                
                                 <!-- Assigned Technician -->
                                 <div>
                                     <label for="user_id" class="block font-medium text-sm text-gray-700">Assigned Technician</label>

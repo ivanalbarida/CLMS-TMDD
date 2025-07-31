@@ -33,11 +33,20 @@
         </div>
 
         <!-- Section 1: Assigned Software -->
-        <div class="mb-8">
+        <div class="mt-8">
             <h3 class="text-lg font-bold mb-2 border-b pb-1">Required Software Profile: {{ $lab->softwareProfile->name ?? 'None Assigned' }}</h3>
-            <ul class="list-disc list-inside text-sm space-y-1 pl-2">
+            <ul class="list-disc list-inside text-sm space-y-3"> 
                 @forelse ($lab->softwareProfile->softwareItems ?? [] as $item)
-                    <li><span class="font-semibold">{{ $item->name }}</span> {{ $item->version }}</li>
+                    <li>
+                        <!-- Software Name and Version -->
+                        <span class="font-semibold">{{ $item->name }} {{ $item->version }}</span>
+                        
+                        @if($item->license_details)
+                            <p class="text-xs text-gray-500 pl-6 mt-1 bg-gray-50 p-2 rounded-md font-mono">
+                                {{ $item->license_details }}
+                            </p>
+                        @endif
+                    </li>
                 @empty
                     <li>No software items in this profile.</li>
                 @endforelse

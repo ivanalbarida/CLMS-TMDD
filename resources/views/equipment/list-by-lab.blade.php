@@ -89,10 +89,12 @@
                                 </td>
 
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    @if ($lab->softwareProfile)
-                                        <a href="{{ route('software-list.index') }}" class="text-indigo-600 hover:text-indigo-900 hover:underline">
-                                            {{ $lab->softwareProfile->name }} ({{ $lab->softwareProfile->softwareItems->count() }} items)
-                                        </a>
+                                    @if ($item->maintenanceRecords->isNotEmpty())
+                                        <!-- If the PC has open software issues, show a warning -->
+                                        <span class="text-yellow-600 font-semibold">⚠️ Software Issue Reported</span>
+                                    @elseif ($lab->softwareProfile)
+                                        <!-- If no issues and a profile exists, it's compliant -->
+                                        <span class="text-green-600">✅ {{ $lab->softwareProfile->name }}</span>
                                     @else
                                         <span class="text-xs italic">No profile assigned</span>
                                     @endif
