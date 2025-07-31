@@ -120,17 +120,6 @@ class UserController extends Controller
         return redirect()->route('users.index')->with('success', 'User deleted successfully.');
     }
 
-    public function activity(User $user)
-    {
-        // Fetch all activity logs for this specific user, newest first.
-        // We'll paginate the results to handle users with long histories.
-        $activities = ActivityLog::where('user_id', $user->id)
-                                ->latest()
-                                ->paginate(25);
-
-        return view('users.activity', compact('user', 'activities'));
-    }
-
     /**
      * Display the specified user. We redirect to the edit page instead.
      */

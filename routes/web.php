@@ -75,7 +75,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         
         // System Configuration
         Route::resource('users', UserController::class);
-        Route::get('/users/{user}/activity', [UserController::class, 'activity'])->name('users.activity');
         Route::resource('pm-tasks', PmTaskController::class);
         Route::resource('software-items', SoftwareItemController::class);
         Route::resource('software-profiles', SoftwareProfileController::class);

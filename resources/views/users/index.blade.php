@@ -29,7 +29,6 @@
                                 <td class="px-6 py-4 ...">{{ $user->role }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex justify-end items-center space-x-4">
-                                        <a href="{{ route('users.activity', $user->id) }}" class="text-blue-600 hover:text-blue-900">Activity</a>
                                         <a href="{{ route('users.edit', $user->id) }}" class="text-indigo-600 hover:text-indigo-900">Edit</a>
                                         
                                         <!-- We will wrap the form in a div so it's a flex item -->
