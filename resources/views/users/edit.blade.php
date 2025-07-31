@@ -21,7 +21,8 @@
                         </div>
                     @endif
 
-                    <form method="POST" action="{{ route('users.update', $user->id) }}">
+                    <form method="POST" action="{{ route('users.update', $user->id) }}" class="p-6"
+                        onsubmit="return confirm('Are you sure you want to update this user\'s details?');">
                         @csrf
                         @method('PUT')
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

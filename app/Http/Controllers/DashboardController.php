@@ -10,67 +10,64 @@ use App\Models\PmTask;
 use App\Models\PmTaskCompletion;
 use Carbon\Carbon;
 use App\Models\ServiceRequest;
+use App\Models\Lab;
+use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        // --- KEY METRIC CARDS ---
+        $user = Auth::user();
+        $assignedLabIds = [];
+        if ($user->role !== 'Admin') {
+            $assignedLabIds = $user->labs()->pluck('labs.id')->toArray();
+        }
+
+        // --- Build Role-Aware Queries ---
+        $equipmentQuery = ($user->role === 'Admin') ? Equipment::query() : Equipment::whereIn('lab_id', $assignedLabIds);
+        $maintenanceQuery = ($user->role === 'Admin') ? MaintenanceRecord::query() : MaintenanceRecord::whereHas('equipment', fn($q) => $q->whereIn('lab_id', $assignedLabIds));
+        $serviceRequestQuery = ($user->role === 'Admin') ? \App\Models\ServiceRequest::query() : \App\Models\ServiceRequest::where(fn($q) => $q->where('requester_id', $user->id)->orWhere('technician_id', $user->id));
+
+        // --- Calculate Stats ---
         $stats = [
-            'for_repair' => \App\Models\Equipment::where('status', 'For Repair')->count(),
-            'total_equipment' => Equipment::count(),
-            'pending_corrective' => \App\Models\MaintenanceRecord::where('type', 'Corrective')->where('status', '!=', 'Completed')->count(),
-            'open_service_requests' => ServiceRequest::whereNotIn('status', ['Completed', 'Rejected'])->count(),
+            'total_equipment' => (clone $equipmentQuery)->count(),
+            'for_repair' => (clone $equipmentQuery)->where('status', 'For Repair')->count(),
+            'open_service_requests' => (clone $serviceRequestQuery)->whereNotIn('status', ['Completed', 'Rejected'])->count(),
         ];
 
-        // --- PENDING PM TASKS LOGIC ---
-        $today = \Carbon\Carbon::today();
-        $allLabs = \App\Models\Lab::all();
+        // --- Accurate PM Count ---
+        $today = Carbon::today();
+        $labsForPM = ($user->role === 'Admin') ? Lab::all() : Lab::whereIn('id', $assignedLabIds)->get();
+        $masterTasks = PmTask::where('is_active', true)->get();
         $pendingPmCount = 0;
-        
-        $allMasterTasks = \App\Models\PmTask::where('is_active', true)->get();
 
-        foreach ($allLabs as $lab) {
-            $completionsThisYear = \App\Models\PmTaskCompletion::where('lab_id', $lab->id)
-                ->whereYear('completed_at', $today->year)
-                ->get();
-            
-            foreach ($allMasterTasks as $task) {
-                $isCompletedInPeriod = false;
+        foreach ($labsForPM as $lab) {
+            $completions = PmTaskCompletion::where('lab_id', $lab->id)->whereYear('completed_at', $today->year)->get();
+            foreach ($masterTasks as $task) {
+                $isCompleted = false;
                 $startDate = null;
-                $isDue = false;
 
                 switch ($task->frequency) {
-                    case 'Daily': $isDue = true; $startDate = $today->copy(); break;
-                    case 'Weekly': $isDue = true; $startDate = $today->copy()->startOfWeek(); break;
-                    case 'Monthly': $isDue = true; $startDate = $today->copy()->startOfMonth(); break;
-                    case 'Quarterly': $isDue = true; $startDate = $today->copy()->startOfQuarter(); break;
+                    case 'Daily': $startDate = $today->copy(); break;
+                    case 'Weekly': $startDate = $today->copy()->startOfWeek(); break;
+                    case 'Monthly': $startDate = $today->copy()->startOfMonth(); break;
+                    case 'Quarterly': $startDate = $today->copy()->startOfQuarter(); break;
                 }
 
-                if ($isDue) {
-                    $isCompletedInPeriod = $completionsThisYear->contains(function ($c) use ($task, $startDate) {
-                        return $c->pm_task_id == $task->id && \Carbon\Carbon::parse($c->completed_at)->gte($startDate);
-                    });
+                if ($startDate) {
+                    $isCompleted = $completions->contains(fn($c) => $c->pm_task_id == $task->id && Carbon::parse($c->completed_at)->gte($startDate));
                 }
-                
-                if ($isDue && !$isCompletedInPeriod) {
+                if ($startDate && !$isCompleted) {
                     $pendingPmCount++;
                 }
             }
         }
-        
         $stats['pending_pm'] = $pendingPmCount;
-        // --- END OF NEW LOGIC ---
-        
-        $openCorrective = MaintenanceRecord::where('type', 'Corrective')
-                    ->where('status', '!=', 'Completed')
-                    ->with('equipment.lab', 'user')->latest('date_reported')->limit(10)->get(); 
 
-        $openPreventive = MaintenanceRecord::where('type', 'Preventive')
-                            ->where('status', '!=', 'Completed')
-                            ->with('equipment.lab', 'user')->latest('scheduled_for')->limit(10)->get();
-        
-        $announcements = \App\Models\Announcement::latest()->limit(7)->get();
+        // --- WIDGETS DATA ---
+        $openCorrective = (clone $maintenanceQuery)->where('type', 'Corrective')->where('status', '!=', 'Completed')->with('equipment.lab', 'user')->latest('date_reported')->limit(5)->get();
+        $openPreventive = (clone $maintenanceQuery)->where('type', 'Preventive')->where('status', '!=', 'Completed')->with('equipment.lab', 'user')->latest('scheduled_for')->limit(5)->get();
+        $announcements = Announcement::latest()->limit(5)->get();
 
         return view('dashboard', compact('stats', 'openCorrective', 'openPreventive', 'announcements'));
     }
