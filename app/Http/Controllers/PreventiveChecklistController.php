@@ -8,12 +8,17 @@ use App\Models\PmTask;
 use App\Models\PmTaskCompletion;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class PreventiveChecklistController extends Controller
 {
     public function index(Request $request)
     {
-        $labs = Lab::orderBy('lab_name')->get();
+        $labsQuery = Lab::query();
+        if (Auth::user()->role !== 'Admin') {
+            $labsQuery->whereHas('users', fn($q) => $q->where('user_id', Auth::id()));
+        }
+        $labs = $labsQuery->orderBy('lab_name')->get();
         $today = Carbon::today();
         $selectedLabId = $request->input('lab_id');
         
@@ -89,43 +94,41 @@ class PreventiveChecklistController extends Controller
             'selectedLabId' => $selectedLabId,
         ]);
     }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'lab_id' => 'required|exists:labs,id',
+            'completion_date' => 'required|date',
+            'task_ids' => 'nullable|array', // The array of checked task IDs
+            'task_ids.*' => 'exists:pm_tasks,id',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            // First, delete any existing completions for this lab on this day
+            // to prevent duplicates if the user re-submits.
+            PmTaskCompletion::where('lab_id', $validated['lab_id'])
+                ->whereDate('completed_at', $validated['completion_date'])
+                ->delete();
+
+            // If the user checked any boxes, loop through and create the completion records
+            if (!empty($validated['task_ids'])) {
+                foreach ($validated['task_ids'] as $taskId) {
+                    PmTaskCompletion::create([
+                        'pm_task_id' => $taskId,
+                        'lab_id' => $validated['lab_id'],
+                        'user_id' => Auth::id(),
+                        'completed_at' => $validated['completion_date'],
+                    ]);
+                }
+            }
+        });
+
+        return redirect()->back()->with('success', 'Checklist submitted successfully!');
+    }
     
     public function toggleCompletion(Request $request)
     {
-        $validated = $request->validate([
-            'pm_task_id' => 'required|exists:pm_tasks,id',
-            'lab_id' => 'required|exists:labs,id',
-            'date' => 'required|date_format:Y-m-d',
-            'is_complete' => 'required|boolean',
-        ]);
-
-        // Define the attributes to find the record
-        $attributes = [
-            'pm_task_id' => $validated['pm_task_id'],
-            'lab_id' => $validated['lab_id'],
-            'completed_at' => $validated['date'],
-        ];
-
-        if ($validated['is_complete']) {
-            // If the checkbox is checked, create the record if it doesn't exist.
-            // Add the user_id to the values that get created.
-            PmTaskCompletion::firstOrCreate($attributes, ['user_id' => Auth::id()]);
-
-            // Also log this specific activity
-            $task = PmTask::find($validated['pm_task_id']);
-            $lab = Lab::find($validated['lab_id']);
-            log_activity('COMPLETED_PM_TASK', $task, "Completed PM task '{$task->task_description}' for lab '{$lab->lab_name}'");
-
-        } else {
-            // If the checkbox is unchecked, find the specific record and delete it.
-            PmTaskCompletion::where($attributes)->delete();
-
-            // Also log the un-checking action
-            $task = PmTask::find($validated['pm_task_id']);
-            $lab = Lab::find($validated['lab_id']);
-            log_activity('UNCHECKED_PM_TASK', $task, "Un-checked PM task '{$task->task_description}' for lab '{$lab->lab_name}'");
-        }
-
-        return response()->json(['success' => true]);
+        //
     }
 }

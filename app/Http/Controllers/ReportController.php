@@ -9,6 +9,9 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\MaintenanceReportExport;
 use App\Models\Lab;
 use App\Models\ActivityLog;
+use Illuminate\Support\Facades\Auth;
+use App\Models\PmTask;
+use App\Models\PmTaskCompletion;
 
 class ReportController extends Controller
 {
@@ -157,5 +160,65 @@ class ReportController extends Controller
         ->get();
     
         return view('reports.lab-report', compact('lab', 'history', 'startDate', 'endDate'));
+    }
+
+    /**
+     * Show the form for generating a PM compliance report.
+     */
+    public function showPmReportForm()
+    {
+        $labsQuery = \App\Models\Lab::query();
+
+        if (Auth::user()->role !== 'Admin') {
+            $labsQuery->whereHas('users', function ($query) {
+                $query->where('user_id', Auth::id());
+            });
+        }
+
+        $labs = $labsQuery->orderBy('lab_name')->get();
+        
+        return view('reports.pm-report-form', compact('labs'));
+    }
+
+    /**
+     * Generate the PM compliance report showing missed tasks.
+     */
+    public function generatePmReport(Request $request)
+    {
+        $request->validate([
+            'lab_id' => 'required|exists:labs,id',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+        ]);
+
+        $lab = Lab::findOrFail($request->lab_id);
+        $startDate = Carbon::parse($request->start_date);
+        $endDate = Carbon::parse($request->end_date);
+        
+        $missedTasks = [];
+        $masterTasks = PmTask::where('is_active', true)->get();
+
+        // Get all completions for this lab within the date range for efficiency
+        $completions = PmTaskCompletion::where('lab_id', $lab->id)
+            ->whereBetween('completed_at', [$startDate, $endDate])
+            ->get();
+
+        // Loop through each day in the selected period
+        for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
+            // DAILY TASKS
+            foreach ($masterTasks->where('frequency', 'Daily') as $task) {
+                $isCompleted = $completions->contains(function ($c) use ($task, $date) {
+                    return $c->pm_task_id == $task->id && Carbon::parse($c->completed_at)->isSameDay($date);
+                });
+                if (!$isCompleted) {
+                    $missedTasks[] = ['date' => $date->copy(), 'task' => $task];
+                }
+            }
+            // WEEKLY, MONTHLY, QUARTERLY logic would go here, checking if the date
+            // is a Monday or the 1st of the month, and then checking if the task
+            // was completed anytime within that week/month/quarter.
+        }
+
+        return view('reports.pm-report', compact('lab', 'startDate', 'endDate', 'missedTasks'));
     }
 }

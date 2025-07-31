@@ -47,7 +47,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     
     // Checklists & Software Lists
     Route::get('/preventive-checklist', [PreventiveChecklistController::class, 'index'])->name('pm-checklist.index');
-    Route::post('/pm-checklist/toggle', [PreventiveChecklistController::class, 'toggleCompletion'])->name('pm-checklist.toggle');
+    Route::post('/preventive-checklist', [PreventiveChecklistController::class, 'store'])->name('pm-checklist.store');
     Route::get('/software-list', [SoftwareListController::class, 'index'])->name('software-list.index');
     
     // Reporting (Accessible to all roles, filtered in controller)
@@ -61,6 +61,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Bulk Import
     Route::get('/import', [CsvImportController::class, 'show'])->name('import.show');
     Route::post('/import', [CsvImportController::class, 'store'])->name('import.store');
+
+    // PM Compliance Report
+    Route::get('/reports/preventive-maintenance/form', [ReportController::class, 'showPmReportForm'])->name('reports.pm.form');
+    Route::post('/reports/preventive-maintenance', [ReportController::class, 'generatePmReport'])->name('reports.pm.generate');
 
 
     // 3. ADMIN-ONLY ROUTES
