@@ -7,7 +7,7 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <form method="POST" action="{{ route('maintenance.store') }}" x-data="{ status: '{{ old('status', 'Pending') }}' }">
                     @csrf
-                    <input type="hidden" name="type" value="Corrective">
+                    <input type="hidden" name="type" value="{{ $type }}">
 
                     @if ($errors->any())
                         <div class="p-4 mx-6 mt-6 bg-red-100 border-l-4 border-red-500 text-red-700">
