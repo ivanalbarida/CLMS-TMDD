@@ -204,10 +204,10 @@ class ReportController extends Controller
             ->whereBetween('completed_at', [$startDate, $endDate])
             ->get();
 
-        // Loop through each day in the selected period
+        // 1. Check for missed Daily tasks
+        $dailyMasterTasks = $masterTasks->where('frequency', 'Daily');
         for ($date = $startDate->copy(); $date->lte($endDate); $date->addDay()) {
-            // DAILY TASKS
-            foreach ($masterTasks->where('frequency', 'Daily') as $task) {
+            foreach ($dailyMasterTasks as $task) {
                 $isCompleted = $completions->contains(function ($c) use ($task, $date) {
                     return $c->pm_task_id == $task->id && Carbon::parse($c->completed_at)->isSameDay($date);
                 });
@@ -215,9 +215,28 @@ class ReportController extends Controller
                     $missedTasks[] = ['date' => $date->copy(), 'task' => $task];
                 }
             }
-            // WEEKLY, MONTHLY, QUARTERLY logic would go here, checking if the date
-            // is a Monday or the 1st of the month, and then checking if the task
-            // was completed anytime within that week/month/quarter.
+        }
+        
+        // 2. Check for missed Weekly tasks
+        $weeklyMasterTasks = $masterTasks->where('frequency', 'Weekly');
+        foreach($weeklyMasterTasks as $task) {
+            $isCompleted = $completions->contains(function($c) use ($task, $startDate, $endDate) {
+                // Check if it was completed ANYTIME between the report start and end date
+                return $c->pm_task_id == $task->id && Carbon::parse($c->completed_at)->between($startDate, $endDate);
+            });
+            if (!$isCompleted) {
+                // If not, add it to the list with a generic "Period" date
+                $missedTasks[] = ['date' => 'For Period', 'task' => $task];
+            }
+        }
+
+        // 3. Check for missed Monthly and End of Term tasks (same logic)
+        $longerTermTasks = $masterTasks->whereIn('frequency', ['Monthly', 'End of Term']);
+        foreach($longerTermTasks as $task) {
+            $isCompleted = $completions->contains(fn($c) => $c->pm_task_id == $task->id);
+            if (!$isCompleted) {
+                $missedTasks[] = ['date' => 'For Period', 'task' => $task];
+            }
         }
 
         return view('reports.pm-report', compact('lab', 'startDate', 'endDate', 'missedTasks'));

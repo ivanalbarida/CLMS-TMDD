@@ -14,83 +14,64 @@ class PreventiveChecklistController extends Controller
 {
     public function index(Request $request)
     {
-        $labsQuery = Lab::query();
+        // Get labs, filtered by user role
+        $labsQuery = \App\Models\Lab::query();
         if (Auth::user()->role !== 'Admin') {
             $labsQuery->whereHas('users', fn($q) => $q->where('user_id', Auth::id()));
         }
         $labs = $labsQuery->orderBy('lab_name')->get();
+        
         $today = Carbon::today();
         $selectedLabId = $request->input('lab_id');
         
-        $tasksByFrequency = [
-            'Daily' => collect(),
-            'Weekly' => collect(),
-            'Monthly' => collect(),
-            'Quarterly' => collect(),
-            'Annually' => collect(),
-        ];
+        $tasksToShow = collect();
         $completedTaskIds = [];
 
         if ($selectedLabId) {
             // Get all active master tasks
             $allMasterTasks = PmTask::where('is_active', true)->get();
 
-            // Get all completions for this lab to check against
+            // Get all completions for this lab for the current year (for efficiency)
             $completionsThisYear = PmTaskCompletion::where('lab_id', $selectedLabId)
                 ->whereYear('completed_at', $today->year)
                 ->get();
 
-            // Manually build the list for each frequency
-            
-            // --- DAILY ---
-            $dailyTasks = $allMasterTasks->where('frequency', 'Daily');
-            foreach ($dailyTasks as $task) {
-                $tasksByFrequency['Daily']->push($task);
-                $isComplete = $completionsThisYear->contains(function ($c) use ($task, $today) {
-                    return $c->pm_task_id == $task->id && Carbon::parse($c->completed_at)->isSameDay($today);
-                });
-                if ($isComplete) { $completedTaskIds[] = $task->id; }
-            }
+            // The main list of tasks to show includes ALL frequencies by default
+            $tasksToShow = $allMasterTasks;
 
-            // --- WEEKLY ---
-            $weeklyTasks = $allMasterTasks->where('frequency', 'Weekly');
-            foreach ($weeklyTasks as $task) {
-                $tasksByFrequency['Weekly']->push($task);
-                $isComplete = $completionsThisYear->contains(function ($c) use ($task, $today) {
-                    return $c->pm_task_id == $task->id && Carbon::parse($c->completed_at)->isSameWeek($today);
-                });
-                if ($isComplete) { $completedTaskIds[] = $task->id; }
-            }
-
-            // --- MONTHLY ---
-            $monthlyTasks = $allMasterTasks->where('frequency', 'Monthly');
-            foreach ($monthlyTasks as $task) {
-                $tasksByFrequency['Monthly']->push($task);
-                $isComplete = $completionsThisYear->contains(function ($c) use ($task, $today) {
-                    return $c->pm_task_id == $task->id && Carbon::parse($c->completed_at)->isSameMonth($today);
-                });
-                if ($isComplete) { $completedTaskIds[] = $task->id; }
-            }
-            
-            // --- QUARTERLY ---
-            $quarterlyTasks = $allMasterTasks->where('frequency', 'Quarterly');
-            foreach ($quarterlyTasks as $task) {
-                $tasksByFrequency['Quarterly']->push($task);
-                $isComplete = $completionsThisYear->contains(function ($c) use ($task, $today) {
-                    return $c->pm_task_id == $task->id && Carbon::parse($c->completed_at)->isSameQuarter($today);
-                });
-                if ($isComplete) { $completedTaskIds[] = $task->id; }
-            }
+            // Now, get a list of which tasks are already completed for their respective periods
+            $completedTaskIds = $tasksToShow->filter(function ($task) use ($completionsThisYear, $today) {
+                $startDate = null;
+                switch ($task->frequency) {
+                    case 'Daily':     $startDate = $today->copy()->startOfDay(); break;
+                    case 'Weekly':    $startDate = $today->copy()->startOfWeek(); break;
+                    case 'Monthly':   $startDate = $today->copy()->startOfMonth(); break;
+                    case 'End of Term': $startDate = $today->copy()->startOfQuarter(); break;
+                    case 'Annually':  $startDate = $today->copy()->startOfYear(); break;
+                }
+                
+                if ($startDate) {
+                    // Check if a completion exists for this task WITHIN its current period
+                    return $completionsThisYear->contains(function ($c) use ($task, $startDate) {
+                        return $c->pm_task_id == $task->id && Carbon::parse($c->completed_at)->gte($startDate);
+                    });
+                }
+                return false;
+            })->pluck('id')->toArray();
         }
-        
-        // Remove empty frequency groups before sending to the view
-        $sortedTasks = collect($tasksByFrequency)->filter(fn($tasks) => $tasks->isNotEmpty());
+
+        // --- Sorting Logic ---
+        $frequencyOrder = ['Daily', 'Weekly', 'Monthly', 'End of Term', 'Annually'];
+        $sortedTasks = $tasksToShow->groupBy('frequency')
+            ->sortBy(function ($tasks, $frequency) use ($frequencyOrder) {
+                return array_search($frequency, $frequencyOrder);
+            });
 
         return view('pm-checklist.index', [
             'labs' => $labs,
             'tasksDueToday' => $sortedTasks,
             'today' => $today,
-            'completedTaskIds' => array_unique($completedTaskIds),
+            'completedTaskIds' => $completedTaskIds,
             'selectedLabId' => $selectedLabId,
         ]);
     }

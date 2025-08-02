@@ -43,13 +43,19 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
-                    @forelse ($missedTasks as $missed)
-                    <tr>
-                        <td class="px-2 py-2 whitespace-nowrap">{{ $missed['date']->format('M d, Y') }}</td>
-                        <td class="px-2 py-2">{{ $missed['task']->frequency }}</td>
-                        <td class="px-2 py-2">{{ $missed['task']->task_description }}</td>
-                    </tr>
-                    @empty
+                @forelse ($missedTasks as $missed)
+                <tr>
+                    <td>
+                        @if(is_string($missed['date']))
+                            {{ $missed['date'] }}
+                        @else
+                            {{ $missed['date']->format('M d, Y') }}
+                        @endif
+                    </td>
+                    <td>{{ $missed['task']->frequency }}</td>
+                    <td>{{ $missed['task']->task_description }}</td>
+                </tr>
+                @empty
                     <tr>
                         <td colspan="3" class="py-4 text-center text-green-600 font-semibold">
                             Congratulations! No tasks were missed in this period for this lab.

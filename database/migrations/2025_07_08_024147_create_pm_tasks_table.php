@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('category');
             $table->text('task_description');
-            $table->enum('frequency', ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Annually']);
+            $table->enum('frequency', ['Daily', 'Weekly', 'Monthly', 'End of Term', 'Annually']);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

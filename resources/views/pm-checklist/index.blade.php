@@ -13,9 +13,9 @@
                 <h3 class="text-2xl font-bold text-gray-700">Scheduled Tasks for: {{ $today->format('F d, Y') }}</h3>
                 
                 <div class="flex items-center space-x-4 mt-4 md:mt-0">
-                    <form id="lab-select-form" method="GET" action="{{ route('pm-checklist.index') }}">
-                        <label for="lab_id" class="text-sm font-medium">Viewing For:</label>
-                        <select name="lab_id" id="lab_id" onchange="this.form.submit()" class="ml-2 rounded-md border-gray-300 shadow-sm">
+                    <form id="lab-select-form" method="GET" action="{{ route('pm-checklist.index') }}" class="flex items-center">
+                        <label for="lab_id" class="text-sm font-medium mr-2">Viewing For:</label>
+                        <select name="lab_id" id="lab_id" onchange="this.form.submit()" class="rounded-md border-gray-300 shadow-sm">
                             <option value="">-- Choose a Lab --</option>
                             @foreach ($labs as $lab)
                                 <option value="{{ $lab->id }}" @selected($selectedLabId == $lab->id)>

@@ -70,11 +70,18 @@
                                 </div>
                                 <div>
                                     <label for="user_id" class="block font-medium text-sm text-gray-700">Assigned Technician</label>
-                                    <select id="user_id" name="user_id" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm" {{ $isCompleted ? 'disabled' : '' }}>
-                                        @foreach($technicians as $tech)
-                                            <option value="{{ $tech->id }}" @selected(old('user_id', $maintenance->user_id) == $tech->id)>{{ $tech->name }}</option>
-                                        @endforeach
-                                    </select>
+                                    
+                                    @if(Auth::user()->role === 'Admin' && !$isCompleted)
+                                        <select id="user_id" name="user_id" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                                            @foreach($technicians as $tech)
+                                                <option value="{{ $tech->id }}" @selected(old('user_id', $maintenance->user_id) == $tech->id)>{{ $tech->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    @else
+                                        <input type="hidden" name="user_id" value="{{ $maintenance->user_id }}">
+                                        <input type="text" value="{{ $maintenance->user->name ?? 'N/A' }}" disabled 
+                                            class="block mt-1 w-full border-gray-300 rounded-md shadow-sm bg-gray-100">
+                                    @endif
                                 </div>
                                 <div>
                                     <label for="status" class="block font-medium text-sm text-gray-700">Status</label>

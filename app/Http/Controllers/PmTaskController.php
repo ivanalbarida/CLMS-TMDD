@@ -17,7 +17,7 @@ class PmTaskController extends Controller
     public function create()
     {
         $categories = ['Hardware Maintenance', 'Software Maintenance', 'Network Maintenance', 'Security & Safety Maintenance', 'Environmental Maintenance', 'Documentation & Monitoring'];
-        $frequencies = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Annually'];
+        $frequencies = ['Daily', 'Weekly', 'Monthly', 'End of Term', 'Annually'];
         return view('pm-tasks.create', compact('categories', 'frequencies'));
     }
 
@@ -27,7 +27,7 @@ class PmTaskController extends Controller
             'tasks' => 'required|array|min:1',
             'tasks.*.category' => 'required|string|max:255',
             'tasks.*.task_description' => 'required|string',
-            'tasks.*.frequency' => 'required|in:Daily,Weekly,Monthly,Quarterly,Annually',
+            'tasks.*.frequency' => 'required|in:Daily,Weekly,Monthly,End of Term,Annually',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -46,7 +46,7 @@ class PmTaskController extends Controller
     public function edit(PmTask $pmTask)
     {
         $categories = ['Hardware Maintenance', 'Software Maintenance', 'Network Maintenance', 'Security & Safety Maintenance', 'Environmental Maintenance', 'Documentation & Monitoring'];
-        $frequencies = ['Daily', 'Weekly', 'Monthly', 'Quarterly', 'Annually'];
+        $frequencies = ['Daily', 'Weekly', 'Monthly', 'End of Term', 'Annually'];
         return view('pm-tasks.edit', compact('pmTask', 'categories', 'frequencies'));
     }
 
@@ -55,7 +55,7 @@ class PmTaskController extends Controller
         $request->validate([
             'category' => 'required|string|max:255',
             'task_description' => 'required|string',
-            'frequency' => 'required|in:Daily,Weekly,Monthly,Quarterly,Annually',
+            'frequency' => 'required|in:Daily,Weekly,Monthly,End of Term,Annually',
             'is_active' => 'boolean',
         ]);
 
