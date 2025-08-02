@@ -18,11 +18,20 @@ class ServiceRequestController extends Controller
     {
         $query = ServiceRequest::with('requester', 'technician')->latest();
 
-        if (Auth::user()->role == 'Custodian') {
-            $query->where('requester_id', Auth::id());
+        // Check the user's role
+        $user = Auth::user();
+        if ($user->role === 'Custodian/Technician') {
+            // A non-admin can see tickets they requested OR tickets assigned to them.
+            $query->where(function ($q) use ($user) {
+                $q->where('requester_id', $user->id)
+                ->orWhere('technician_id', $user->id);
+            });
         }
+        
+        // Admins will skip the 'if' block and see all requests.
 
         $serviceRequests = $query->paginate(15);
+
         return view('service-requests.index', compact('serviceRequests'));
     }
 
@@ -36,8 +45,10 @@ class ServiceRequestController extends Controller
             $labsQuery->whereHas('users', fn($q) => $q->where('user_id', Auth::id()));
         }
         $labs = $labsQuery->get();
-        
-        return view('service-requests.create', compact('labs'));
+
+        $technicians = \App\Models\User::whereIn('role', ['Admin', 'Custodian/Technician'])->orderBy('name')->get();
+
+        return view('service-requests.create', compact('labs', 'technicians'));
     }
 
     /**
@@ -45,24 +56,29 @@ class ServiceRequestController extends Controller
      */
     public function store(Request $request)
     {
+        // Define the validation rule for technician_id based on the user's role
+        $technicianValidation = Auth::user()->role === 'Admin' ? 'required' : 'nullable';
+
         $request->validate([
             'requesting_office' => 'required|string|max:255',
             'request_type' => 'required|in:Procurement,Repair,Condemnation,Other',
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'equipment_details' => 'nullable|string',
+            'technician_id' => [$technicianValidation, 'exists:users,id'], // Apply the dynamic rule
         ]);
 
-        // Get all the validated data from the request
-        $data = $request->all();
-        // Manually add the data the system should control
-        $data['requester_id'] = Auth::id();
-        $data['status'] = 'Submitted'; // <-- Set the default status automatically
+        $dataToCreate = $request->all();
+        // The user who creates the ticket is always the requester
+        $dataToCreate['requester_id'] = Auth::id();
 
-        // Create the request
-        $serviceRequest = ServiceRequest::create($data);
+        // If the logged-in user is NOT an Admin, force them to be the assigned technician.
+        if (Auth::user()->role !== 'Admin') {
+            $dataToCreate['technician_id'] = Auth::id();
+        }
 
-        // Log this activity
+        $serviceRequest = ServiceRequest::create($dataToCreate);
+
         log_activity(
             'REQUEST_SUBMITTED',
             $serviceRequest,
@@ -105,22 +121,24 @@ class ServiceRequestController extends Controller
     {
         $request->validate([
             'technician_id' => 'nullable|exists:users,id',
-            // Make sure all possible statuses are in this list
             'status' => 'required|in:Submitted,In Review,In Progress,Completed,On Hold,Rejected',
             'classification' => 'required|in:Simple,Complex,Unclassified',
             'action_taken' => 'nullable|string',
             'recommendation' => 'nullable|string',
-            // This is the key validation rule
             'rejection_reason' => 'required_if:status,Rejected|nullable|string',
         ]);
 
-        $originalStatus = $serviceRequest->status;
+        $serviceRequest->status = $request->status;
+        $serviceRequest->classification = $request->classification;
+        $serviceRequest->action_taken = $request->action_taken;
+        $serviceRequest->recommendation = $request->recommendation;
+
+        if ($request->filled('technician_id')) {
+            $serviceRequest->technician_id = $request->technician_id;
+        }
+
+        $originalStatus = $serviceRequest->getOriginal('status'); 
         $newStatus = $request->status;
-
-        // Use fill() to stage the changes
-        $serviceRequest->fill($request->all());
-
-        // Use a variable for the log message
         $logMessage = "Updated details for request '{$serviceRequest->title}'.";
 
         if ($newStatus !== $originalStatus) {
@@ -130,6 +148,7 @@ class ServiceRequestController extends Controller
                 $logMessage = "Started work on request '{$serviceRequest->title}'.";
             }
             if ($newStatus == 'Rejected') {
+                $serviceRequest->rejection_reason = $request->rejection_reason;
                 $logMessage = "Request '{$serviceRequest->title}' was rejected. Reason: " . $request->rejection_reason;
             }
             if ($newStatus == 'Completed') {
@@ -138,10 +157,8 @@ class ServiceRequestController extends Controller
             }
         }
         
-        // Save all staged changes
         $serviceRequest->save();
         
-        // Create a single, definitive log entry
         log_activity('UPDATED', $serviceRequest, $logMessage);
 
         return redirect()->route('service-requests.show', $serviceRequest->id)

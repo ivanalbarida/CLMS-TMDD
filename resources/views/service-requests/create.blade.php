@@ -36,6 +36,21 @@
                                     <option value="Other">Other</option>
                                 </select>
                             </div>
+
+                            <div class="md:col-span-2">
+                                <label for="technician_id" class="block font-medium text-sm text-gray-700">Assigned To</label>
+                                @if(Auth::user()->role === 'Admin')
+                                    <select id="technician_id" name="technician_id" required class="block mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                                        <option value="">-- Select Technician --</option>
+                                        @foreach($technicians as $tech)
+                                            <option value="{{ $tech->id }}">{{ $tech->name }} ({{ $tech->role }})</option>
+                                        @endforeach
+                                    </select>
+                                @else
+                                    <input type="hidden" name="technician_id" value="{{ Auth::id() }}">
+                                    <input type="text" value="{{ Auth::user()->name }}" disabled class="block mt-1 w-full border-gray-300 rounded-md shadow-sm bg-gray-100">
+                                @endif
+                            </div>
                         </div>
                         <div>
                             <label for="equipment_details" class="block font-medium text-sm text-gray-700">Equipment / Property Tag / Serial No. (If applicable)</label>

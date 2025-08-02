@@ -12,6 +12,7 @@ use App\Models\ActivityLog;
 use Illuminate\Support\Facades\Auth;
 use App\Models\PmTask;
 use App\Models\PmTaskCompletion;
+use App\Models\ServiceRequest;
 
 class ReportController extends Controller
 {
@@ -220,5 +221,91 @@ class ReportController extends Controller
         }
 
         return view('reports.pm-report', compact('lab', 'startDate', 'endDate', 'missedTasks'));
+    }
+
+    public function showServiceRequestReportForm()
+    {
+        return view('reports.service-request-form');
+    }
+
+    /**
+ * Generate and display the service request report.
+ */
+public function generateServiceRequestReport(Request $request)
+{
+    // Get the filtered records using a reusable private method
+    $records = $this->getFilteredServiceRequests($request);
+    $filters = $request->only(['start_date', 'end_date', 'type', 'status']);
+
+    return view('reports.service-request-show', [
+        'records' => $records,
+        'startDate' => Carbon::parse($request->start_date),
+        'endDate' => Carbon::parse($request->end_date),
+        'filters' => $filters,
+    ]);
+}
+
+/**
+ * Export the service request report as a CSV.
+ */
+public function exportServiceRequestReport(Request $request)
+{
+    // Get the filtered records
+    $records = $this->getFilteredServiceRequests($request);
+    
+    // (We will create this Export class in the next step)
+    // return Excel::download(new ServiceRequestReportExport($records), 'service-request-report.csv');
+    // For now, let's use the manual method as it's more reliable for you
+    
+    $fileName = 'service-request-report.csv';
+    $headers = [
+        "Content-type"        => "text/csv",
+        "Content-Disposition" => "attachment; filename=$fileName",
+        // ... other headers
+    ];
+
+    $columns = [/* ... Define CSV columns ... */];
+
+    $callback = function() use($records, $columns) {
+        $file = fopen('php://output', 'w');
+        fputcsv($file, $columns);
+        // ... loop through $records and fputcsv() each row ...
+        fclose($file);
+    };
+    
+    return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * A private helper method to get filtered service requests based on role.
+     */
+    private function getFilteredServiceRequests(Request $request)
+    {
+        $request->validate([
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
+            'type' => 'nullable|string',
+            'status' => 'nullable|string',
+        ]);
+
+        $startDate = Carbon::parse($request->start_date)->startOfDay();
+        $endDate = Carbon::parse($request->end_date)->endOfDay();
+        
+        $query = ServiceRequest::query();
+        
+        // Filter by date range (based on when it was created/submitted)
+        $query->whereBetween('created_at', [$startDate, $endDate]);
+        
+        // Apply optional filters
+        if ($request->filled('type')) { $query->where('request_type', $request->type); }
+        if ($request->filled('status')) { $query->where('status', $request->status); }
+        
+        // Apply role-based filter
+        if (Auth::user()->role !== 'Admin') {
+            $user = Auth::user();
+            $query->where(fn($q) => $q->where('requester_id', $user->id)->orWhere('technician_id', $user->id));
+        }
+        
+        return $query->with('requester', 'technician')->latest()->get();
     }
 }

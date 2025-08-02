@@ -44,6 +44,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Service Requests (Full CRUD for all roles)
     Route::post('/service-requests/{serviceRequest}/verify', [ServiceRequestController::class, 'verify'])->name('service-requests.verify');
     Route::resource('service-requests', ServiceRequestController::class);
+
+    // Service Request Report Routes
+    Route::get('/reports/service-requests/form', [ReportController::class, 'showServiceRequestReportForm'])->name('reports.service-request.form');
+    Route::get('/reports/service-requests/generate', [ReportController::class, 'generateServiceRequestReport'])->name('reports.service-request.generate');
+    Route::get('/reports/service-requests/export', [ReportController::class, 'exportServiceRequestReport'])->name('reports.service-request.export');
     
     // Checklists & Software Lists
     Route::get('/preventive-checklist', [PreventiveChecklistController::class, 'index'])->name('pm-checklist.index');

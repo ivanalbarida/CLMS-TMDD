@@ -23,6 +23,7 @@ return new class extends Migration
             $table->enum('classification', ['Simple', 'Complex', 'Unclassified'])->default('Unclassified');
             $table->text('action_taken')->nullable();
             $table->text('recommendation')->nullable();
+            $table->text('rejection_reason')->nullable();
             $table->string('status_after_service')->nullable();
             $table->string('client_verifier_name')->nullable();
             $table->enum('status', ['Submitted', 'In Review', 'Approved', 'Rejected', 'In Progress', 'Completed', 'On Hold'])->default('Submitted');
