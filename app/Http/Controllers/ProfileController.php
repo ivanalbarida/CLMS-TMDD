@@ -26,11 +26,14 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
+        // The fill() method will now only update the 'name' field,
+        // as that is the only rule defined in your ProfileUpdateRequest.
         $request->user()->fill($request->validated());
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
-        }
+        // The logic for email verification is no longer needed.
+        // if ($request->user()->isDirty('email')) {
+        //     $request->user()->email_verified_at = null;
+        // }
 
         $request->user()->save();
 
