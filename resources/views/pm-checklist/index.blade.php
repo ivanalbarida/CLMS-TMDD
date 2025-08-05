@@ -42,7 +42,8 @@
                         <div>
                             <div class="flex justify-between items-center border-b pb-2 mb-3">
                                 <h4 class="font-bold text-lg">{{ $frequency }} Tasks</h4>
-                                <button type="button" onclick="checkAll('{{ strtolower($frequency) }}')" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">Check All</button>
+                                <!-- CORRECTED: Use the full class path for Str::slug() -->
+                                <button type="button" onclick="checkAll('{{ \Illuminate\Support\Str::slug($frequency) }}')" class="text-xs bg-gray-200 hover:bg-gray-300 px-2 py-1 rounded">Check All</button>
                             </div>
                             <div class="space-y-3">
                                 @foreach($tasks as $task)
@@ -50,8 +51,9 @@
                                         $isComplete = in_array($task->id, $completedTaskIds);
                                     @endphp
                                     <label class="flex items-center p-3 rounded-md transition {{ $isComplete ? 'bg-green-100 text-gray-500' : 'bg-gray-50 hover:bg-gray-100' }}">
+                                        <!-- CORRECTED: Use the full class path for Str::slug() -->
                                         <input type="checkbox" name="task_ids[]" value="{{ $task->id }}"
-                                               class="h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 checklist-{{ strtolower($frequency) }}"
+                                               class="h-5 w-5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500 checklist-{{ \Illuminate\Support\Str::slug($frequency) }}"
                                                {{ $isComplete ? 'checked' : '' }}>
                                         <span class="ml-3 text-sm">{{ $task->task_description }}</span>
                                     </label>
@@ -82,10 +84,9 @@
     <script>
         function checkAll(frequency) {
             const checkboxes = document.querySelectorAll('.checklist-' + frequency);
-            // Check if the first box is already checked. If so, uncheck all. Otherwise, check all.
-            const isChecked = checkboxes[0].checked;
+            const shouldCheck = checkboxes.length > 0 ? !checkboxes[0].checked : false;
             checkboxes.forEach(checkbox => {
-                checkbox.checked = !isChecked;
+                checkbox.checked = shouldCheck;
             });
         }
     </script>
